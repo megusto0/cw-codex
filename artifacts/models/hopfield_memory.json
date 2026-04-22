@@ -1,0 +1,1647 @@
+[
+  {
+    "window_id": "559-20211208150600-5",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211208184500-6",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211208233600-7",
+    "label": "ambiguous",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211209055100-8",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211210143000-17",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211211051000-20",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211211103500-21",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211212134200-25",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211216181500-37",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211217110300-39",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211218092000-40",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211221221100-53",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211222055500-54",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211222134500-55",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211223110000-59",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211223184000-60",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211225125000-66",
+    "label": "late_low",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211225172000-67",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211226154000-70",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211228050500-74",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211228110000-75",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211228180300-76",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211229063000-77",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211229174500-79",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211230051500-80",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211230130000-81",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211231053500-83",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211231142000-85",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20211231182000-86",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220101173000-91",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220103163000-99",
+    "label": "late_low",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220104054500-100",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220104104500-101",
+    "label": "late_low",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220105074500-104",
+    "label": "controlled_response",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220105115000-105",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220106092000-109",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220106183000-112",
+    "label": "late_low",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220107084000-114",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220108173000-120",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220110134500-126",
+    "label": "late_low",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220110181000-127",
+    "label": "ambiguous",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220111110000-129",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220112054500-131",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220112133000-132",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220113071000-135",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "559-20220113133000-136",
+    "label": "postprandial_spike",
+    "patient_id": "559"
+  },
+  {
+    "window_id": "563-20210914080000-1",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210914113000-2",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210914161000-3",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210915065000-6",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210915113000-7",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210915202000-8",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210916113000-11",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210917203000-15",
+    "label": "late_low",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210918083700-16",
+    "label": "late_low",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210918161800-17",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210919113000-19",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210919170200-20",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210920080500-21",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210921060000-25",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210921113400-26",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210921180000-27",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210922060300-28",
+    "label": "late_low",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210922113000-29",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210922203400-31",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210923053800-32",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210923113000-33",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210923183100-34",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210924055000-36",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210924113000-37",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210926090000-40",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210926144200-41",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210926193000-42",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210927113000-44",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210927194800-45",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210928193500-47",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210929113000-48",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210929180000-49",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210930054200-50",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210930113000-51",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20210930191500-52",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211001054500-53",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211002143700-57",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211003182700-60",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211004113000-63",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211004184500-64",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211005055000-65",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211005194200-67",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211006060000-68",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211006113000-69",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211008055000-74",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211009091500-76",
+    "label": "late_low",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211009184500-77",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211010123000-78",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211011054000-79",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211011113000-80",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211012055400-82",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211012113000-83",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211013064600-84",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211013113000-85",
+    "label": "late_low",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211013191500-86",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211015140000-90",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211015200000-91",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211016073000-92",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211016143900-93",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211017132000-95",
+    "label": "ambiguous",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211018113000-99",
+    "label": "controlled_response",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "563-20211018183000-100",
+    "label": "postprandial_spike",
+    "patient_id": "563"
+  },
+  {
+    "window_id": "570-20211207182800-0",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211207213300-1",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211208061400-2",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211209193900-9",
+    "label": "ambiguous",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211210132800-11",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211210195700-12",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211211170100-14",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211212151500-18",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211212211800-19",
+    "label": "ambiguous",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211213122900-21",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211213205400-23",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211214183700-27",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211216182800-34",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211217123700-36",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211219133100-42",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211220191300-47",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211222075200-53",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211222120200-54",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211223061900-56",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211224131700-61",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211224183600-62",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211225004100-63",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211225213000-65",
+    "label": "late_low",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211226095400-66",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211227151100-69",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211227181300-70",
+    "label": "ambiguous",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211227211500-71",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211228061400-72",
+    "label": "ambiguous",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211228114800-73",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211228192400-74",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211229123600-76",
+    "label": "ambiguous",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211230081100-79",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211230125500-80",
+    "label": "late_low",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211230202700-81",
+    "label": "late_low",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20211231062600-82",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20220101135400-86",
+    "label": "controlled_response",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "570-20220102175700-90",
+    "label": "postprandial_spike",
+    "patient_id": "570"
+  },
+  {
+    "window_id": "575-20211117141800-0",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211117213200-3",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211118131100-6",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211118203400-7",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211119071000-8",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211119130200-10",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211119235300-14",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211122190500-31",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211122221000-32",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211123071000-33",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211123130300-34",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211124071100-37",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211124124700-38",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211124182600-39",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211125131500-42",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211127084500-51",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211128123000-58",
+    "label": "late_low",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211129123600-65",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211130072000-68",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211130134800-69",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211201072000-74",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211201124500-76",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211201224800-79",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211204001500-91",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211204093500-92",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211204155000-94",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211204233000-96",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211206074000-104",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211207110900-109",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211208074300-113",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211208134800-115",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211208170000-116",
+    "label": "late_low",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211209131800-121",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211209195000-124",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211210224600-131",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211211095400-132",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211211143800-133",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211211224200-137",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211214104100-150",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211214200500-151",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211216210500-160",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211217102500-162",
+    "label": "late_low",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211217201500-164",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211217231700-165",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211218110000-166",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211219012900-172",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211219222000-176",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211220124000-177",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211220193000-179",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211221012500-180",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211221084000-181",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211221124000-182",
+    "label": "ambiguous",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211221173600-183",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211221224400-184",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211222083500-185",
+    "label": "postprandial_spike",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "575-20211222124400-186",
+    "label": "controlled_response",
+    "patient_id": "575"
+  },
+  {
+    "window_id": "588-20210831070100-5",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210831110700-6",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210831142200-7",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210901065800-12",
+    "label": "unstable_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210902073300-19",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210902115900-20",
+    "label": "ambiguous",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210902203100-23",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210903110500-25",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210904114800-31",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210905203400-41",
+    "label": "late_low",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210907114100-50",
+    "label": "unstable_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210907213600-52",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210908123300-54",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210909111200-59",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210909154700-60",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210910134400-66",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210911213700-73",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210912142800-76",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210912205600-78",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210913071300-79",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210913125800-80",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210914073900-84",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210914121000-85",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210914211100-87",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210915064900-88",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210915115600-89",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210915194400-91",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210916115800-93",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210917071000-97",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210917211600-100",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210918220200-106",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210919091200-107",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210919203800-111",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210920073000-112",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210920111300-113",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210920205700-115",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210921070500-116",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210921114500-117",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210921180000-118",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210922111700-120",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210922210400-122",
+    "label": "late_low",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210923115000-124",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210924071500-127",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210924110000-128",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210924182000-129",
+    "label": "ambiguous",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210924212000-130",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210925120400-132",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210927205700-145",
+    "label": "ambiguous",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210928110900-148",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210929114500-152",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210929180700-153",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210929210800-154",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210930120500-156",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20210930204300-158",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211001071200-159",
+    "label": "ambiguous",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211001113500-160",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211002195000-166",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211005121700-178",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211005180000-179",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211006064900-181",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211006112200-182",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211007112100-186",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211007173700-187",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211007210600-188",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211008183000-191",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211009074600-194",
+    "label": "controlled_response",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211009114600-195",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "588-20211010125000-198",
+    "label": "postprandial_spike",
+    "patient_id": "588"
+  },
+  {
+    "window_id": "591-20211130205000-2",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211201063000-3",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211202084300-9",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211202120600-10",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211203130500-15",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211203210000-17",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211204081100-18",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211204195800-21",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211205124000-24",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211205203000-26",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211207195500-40",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211209200000-50",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211211100400-57",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211211134700-58",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211211184500-59",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211212054000-60",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211213082100-65",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211213140800-67",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211213211900-69",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211215173300-82",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211216202300-91",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211217213600-96",
+    "label": "late_low",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211218123200-99",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211218180000-100",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211219085800-101",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211219140000-102",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211219194500-104",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211220151500-107",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211221074000-110",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211221112400-111",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211221224000-113",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211222092100-114",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211222200800-117",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211223070100-118",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211224162600-124",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211224215500-125",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211225071000-126",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211230080900-146",
+    "label": "late_low",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211230120000-147",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211231080000-149",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211231113300-150",
+    "label": "late_low",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20211231212200-152",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220104183000-169",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220104220700-170",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220105110400-173",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220105211900-175",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220106111500-178",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220106174300-179",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220106210000-180",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220107124800-183",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220108071000-185",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220108122800-186",
+    "label": "unstable_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220108191500-188",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220109072100-189",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220109114800-190",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220110062000-192",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220111140000-199",
+    "label": "postprandial_spike",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220111202400-201",
+    "label": "controlled_response",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220112073500-202",
+    "label": "ambiguous",
+    "patient_id": "591"
+  },
+  {
+    "window_id": "591-20220112120000-203",
+    "label": "controlled_response",
+    "patient_id": "591"
+  }
+]

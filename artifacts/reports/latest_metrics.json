@@ -1,0 +1,901 @@
+{
+  "dashboard": {
+    "title": "RL Therapy Lab - Hopfield Postprandial Memory",
+    "subtitle": "A retrieval-first coursework demo of modern Hopfield associative memory on OhioT1DM meal windows.",
+    "disclaimer": "Retrospective educational demo only. Not clinical advice, not a treatment recommender, and not a dosing tool.",
+    "patients_count": 6,
+    "total_meal_windows": 1303,
+    "usable_meal_windows": 474,
+    "memory_size": 329,
+    "feature_dimension": 85,
+    "headline_metrics": {
+      "top1_accuracy": 0.410958904109589,
+      "top3_hit_rate": 0.6164383561643836,
+      "top5_hit_rate": 0.6575342465753424,
+      "mean_reciprocal_rank": 0.5050228310502283,
+      "label_purity_top5": 0.4054794520547945,
+      "prototype_purity": 0.4666666666666667,
+      "nearest_neighbor_consistency": 0.410958904109589
+    },
+    "headline_summary": "Hopfield retrieval reached 61.6% top-3 hit rate and 41.1% top-1 same-label accuracy on held-out meal windows.",
+    "label_distribution": {
+      "ambiguous": 60,
+      "controlled_response": 113,
+      "late_low": 27,
+      "postprandial_spike": 264,
+      "unstable_response": 10
+    },
+    "split_distribution": {
+      "train": 329,
+      "val": 72,
+      "test": 73
+    },
+    "exclusion_reasons": {
+      "overlap_next_meal": 310,
+      "overlap_previous_meal": 108,
+      "pre_existing_state": 277,
+      "missing_baseline": 64,
+      "insufficient_premeal_cgm": 35,
+      "insufficient_postmeal_cgm": 32,
+      "invalid_carbs": 3
+    },
+    "reused_visual_ideas": [
+      "A left navigation rail with calm card-based sections.",
+      "Chart containers with restrained borders and readable spacing.",
+      "Dashboard-style metric cards and clean comparison tables."
+    ],
+    "not_reused_from_glucoscope": [
+      "No Glucoscope backend modules or routers.",
+      "No Glucoscope meal-processing, analytics, RL, or XML parsing code.",
+      "No therapy recommendation wording or dose logic."
+    ]
+  },
+  "evaluation": {
+    "retrieval_metrics": {
+      "top1_accuracy": 0.410958904109589,
+      "top3_hit_rate": 0.6164383561643836,
+      "top5_hit_rate": 0.6575342465753424,
+      "mean_reciprocal_rank": 0.5050228310502283,
+      "label_purity_top5": 0.4054794520547945,
+      "prototype_purity": 0.4666666666666667,
+      "nearest_neighbor_consistency": 0.410958904109589
+    },
+    "diagnostics": {
+      "average_energy_before": -0.7108660001746049,
+      "average_energy_after": -0.8339802870297515,
+      "average_energy_drop": 0.12311428685514675,
+      "average_top_weight_gap": 0.0047247863785742535,
+      "average_attention_entropy": 4.127437147116423,
+      "same_patient_top1_rate": 0.3013698630136986,
+      "cross_patient_top1_rate": 0.6986301369863014
+    },
+    "baselines": {
+      "hopfield": {
+        "accuracy": 0.4657534246575342,
+        "balanced_accuracy": 0.18737373737373736,
+        "macro_f1": 0.17235023041474654,
+        "weighted_f1": 0.4346106095995623,
+        "confusion_matrix": {
+          "labels": [
+            "ambiguous",
+            "controlled_response",
+            "late_low",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "matrix": [
+            [
+              0,
+              1,
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              5,
+              0,
+              13,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              15,
+              0,
+              29,
+              0
+            ],
+            [
+              0,
+              2,
+              0,
+              2,
+              0
+            ]
+          ]
+        }
+      },
+      "cosine_knn": {
+        "accuracy": 0.5068493150684932,
+        "balanced_accuracy": 0.29848484848484846,
+        "macro_f1": 0.25348452634065677,
+        "weighted_f1": 0.5162762249643215,
+        "confusion_matrix": {
+          "labels": [
+            "ambiguous",
+            "controlled_response",
+            "late_low",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "matrix": [
+            [
+              2,
+              1,
+              0,
+              1,
+              0
+            ],
+            [
+              4,
+              6,
+              1,
+              7,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              2,
+              0
+            ],
+            [
+              6,
+              8,
+              1,
+              29,
+              0
+            ],
+            [
+              1,
+              2,
+              1,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "nearest_prototype": {
+        "accuracy": 0.3972602739726027,
+        "balanced_accuracy": 0.31767676767676767,
+        "macro_f1": 0.24319781966840792,
+        "weighted_f1": 0.4275011744794178,
+        "confusion_matrix": {
+          "labels": [
+            "ambiguous",
+            "controlled_response",
+            "late_low",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "matrix": [
+            [
+              0,
+              1,
+              0,
+              1,
+              2
+            ],
+            [
+              0,
+              5,
+              2,
+              6,
+              5
+            ],
+            [
+              0,
+              0,
+              1,
+              2,
+              0
+            ],
+            [
+              0,
+              11,
+              8,
+              21,
+              4
+            ],
+            [
+              0,
+              2,
+              0,
+              0,
+              2
+            ]
+          ]
+        }
+      },
+      "patient_majority": {
+        "accuracy": 0.6027397260273972,
+        "balanced_accuracy": 0.2,
+        "macro_f1": 0.15042735042735042,
+        "weighted_f1": 0.4533426999180423,
+        "confusion_matrix": {
+          "labels": [
+            "ambiguous",
+            "controlled_response",
+            "late_low",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "matrix": [
+            [
+              0,
+              0,
+              0,
+              4,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              18,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              44,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              4,
+              0
+            ]
+          ]
+        }
+      },
+      "logistic_regression": {
+        "accuracy": 0.5068493150684932,
+        "balanced_accuracy": 0.19444444444444445,
+        "macro_f1": 0.18175270108043215,
+        "weighted_f1": 0.46394448190234994,
+        "confusion_matrix": {
+          "labels": [
+            "ambiguous",
+            "controlled_response",
+            "late_low",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "matrix": [
+            [
+              0,
+              0,
+              0,
+              4,
+              0
+            ],
+            [
+              1,
+              4,
+              0,
+              13,
+              0
+            ],
+            [
+              1,
+              1,
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              10,
+              0,
+              33,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              3,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    "per_patient": [
+      {
+        "patient_id": "559",
+        "top1_accuracy": 0.4,
+        "top3_hit_rate": 0.5,
+        "mrr": 0.495,
+        "same_patient_rate": 0.12000000000000002,
+        "count": 10
+      },
+      {
+        "patient_id": "563",
+        "top1_accuracy": 0.42857142857142855,
+        "top3_hit_rate": 0.6428571428571429,
+        "mrr": 0.5119047619047619,
+        "same_patient_rate": 0.34285714285714286,
+        "count": 14
+      },
+      {
+        "patient_id": "570",
+        "top1_accuracy": 0.2222222222222222,
+        "top3_hit_rate": 0.6666666666666666,
+        "mrr": 0.4351851851851851,
+        "same_patient_rate": 0.2222222222222222,
+        "count": 9
+      },
+      {
+        "patient_id": "575",
+        "top1_accuracy": 0.5833333333333334,
+        "top3_hit_rate": 0.6666666666666666,
+        "mrr": 0.625,
+        "same_patient_rate": 0.30000000000000004,
+        "count": 12
+      },
+      {
+        "patient_id": "588",
+        "top1_accuracy": 0.26666666666666666,
+        "top3_hit_rate": 0.6,
+        "mrr": 0.39999999999999997,
+        "same_patient_rate": 0.21333333333333337,
+        "count": 15
+      },
+      {
+        "patient_id": "591",
+        "top1_accuracy": 0.5384615384615384,
+        "top3_hit_rate": 0.6153846153846154,
+        "mrr": 0.5641025641025641,
+        "same_patient_rate": 0.35384615384615387,
+        "count": 13
+      }
+    ],
+    "noise_robustness": [
+      {
+        "mode": "gaussian_noise",
+        "level": 0.0,
+        "top1_accuracy": 0.410958904109589,
+        "top3_hit_rate": 0.6164383561643836
+      },
+      {
+        "mode": "gaussian_noise",
+        "level": 0.03,
+        "top1_accuracy": 0.3972602739726027,
+        "top3_hit_rate": 0.6164383561643836
+      },
+      {
+        "mode": "gaussian_noise",
+        "level": 0.06,
+        "top1_accuracy": 0.3835616438356164,
+        "top3_hit_rate": 0.6164383561643836
+      },
+      {
+        "mode": "gaussian_noise",
+        "level": 0.1,
+        "top1_accuracy": 0.410958904109589,
+        "top3_hit_rate": 0.589041095890411
+      },
+      {
+        "mode": "feature_mask",
+        "level": 0.0,
+        "top1_accuracy": 0.410958904109589,
+        "top3_hit_rate": 0.6164383561643836
+      },
+      {
+        "mode": "feature_mask",
+        "level": 0.1,
+        "top1_accuracy": 0.3972602739726027,
+        "top3_hit_rate": 0.6164383561643836
+      },
+      {
+        "mode": "feature_mask",
+        "level": 0.2,
+        "top1_accuracy": 0.4246575342465753,
+        "top3_hit_rate": 0.6301369863013698
+      }
+    ],
+    "qualitative_examples": {
+      "successes": [
+        {
+          "window_id": "575-20220108191100-274",
+          "patient_id": "575",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "559-20211211103500-21",
+            "591-20211204081100-18",
+            "588-20210924110000-128",
+            "588-20210910134400-66",
+            "591-20220105211900-175"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "controlled_response",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "559",
+            "591",
+            "588",
+            "588",
+            "591"
+          ],
+          "top1_correct": 1,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 1.0,
+          "label_purity_top5": 0.8,
+          "same_patient_rate": 0.0,
+          "cross_patient_top1": 1,
+          "energy_before": -0.4571134154942039,
+          "energy_after": -0.6225514177120577,
+          "energy_drop": 0.16543800221785376,
+          "attention_entropy": 4.125997778462755,
+          "top_weight_gap": 0.020449803862822365,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.26081422311273045,
+            "postprandial_spike": 0.26326401568520075,
+            "late_low": 0.24733306838817107,
+            "unstable_response": 0.22858869281389768
+          }
+        },
+        {
+          "window_id": "570-20220120115400-148",
+          "patient_id": "570",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "591-20211219140000-102",
+            "591-20211221112400-111",
+            "588-20210913125800-80",
+            "591-20211230120000-147",
+            "588-20210909111200-59"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "591",
+            "591",
+            "588",
+            "591",
+            "588"
+          ],
+          "top1_correct": 1,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 1.0,
+          "label_purity_top5": 1.0,
+          "same_patient_rate": 0.0,
+          "cross_patient_top1": 1,
+          "energy_before": -0.7569782583717091,
+          "energy_after": -0.8332778234076702,
+          "energy_drop": 0.07629956503596114,
+          "attention_entropy": 4.177890289583871,
+          "top_weight_gap": 0.010535845576797175,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "unstable_response",
+          "prototype_distribution": {
+            "controlled_response": 0.32866281767438954,
+            "postprandial_spike": 0.1418984275757127,
+            "late_low": 0.18191341566067018,
+            "unstable_response": 0.34752533908922767
+          }
+        },
+        {
+          "window_id": "559-20220127170000-178",
+          "patient_id": "559",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "575-20211118131100-6",
+            "575-20211119130200-10",
+            "563-20210923053800-32",
+            "575-20211117213200-3",
+            "575-20211211095400-132"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "575",
+            "575",
+            "563",
+            "575",
+            "575"
+          ],
+          "top1_correct": 1,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 1.0,
+          "label_purity_top5": 1.0,
+          "same_patient_rate": 0.0,
+          "cross_patient_top1": 1,
+          "energy_before": -0.6206880678112685,
+          "energy_after": -0.8655873706890777,
+          "energy_drop": 0.24489930287780914,
+          "attention_entropy": 4.322956759801269,
+          "top_weight_gap": 0.007517656604674253,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.14887388372970875,
+            "postprandial_spike": 0.4818424477692837,
+            "late_low": 0.165185899740989,
+            "unstable_response": 0.20409776876001842
+          }
+        },
+        {
+          "window_id": "563-20211105113000-149",
+          "patient_id": "563",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "575-20211118131100-6",
+            "563-20210923053800-32",
+            "575-20211117213200-3",
+            "575-20211209131800-121",
+            "575-20211211095400-132"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "575",
+            "563",
+            "575",
+            "575",
+            "575"
+          ],
+          "top1_correct": 1,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 1.0,
+          "label_purity_top5": 1.0,
+          "same_patient_rate": 0.2,
+          "cross_patient_top1": 1,
+          "energy_before": -0.7402637872610565,
+          "energy_after": -0.8760793605840771,
+          "energy_drop": 0.13581557332302063,
+          "attention_entropy": 4.29024384261493,
+          "top_weight_gap": 0.006868353867476605,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.14898718498920466,
+            "postprandial_spike": 0.4617600432364467,
+            "late_low": 0.2343881280373142,
+            "unstable_response": 0.1548646437370346
+          }
+        },
+        {
+          "window_id": "559-20220121173000-161",
+          "patient_id": "559",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "575-20211118131100-6",
+            "563-20210923053800-32",
+            "575-20211117213200-3",
+            "559-20211223110000-59",
+            "575-20211119130200-10"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "575",
+            "563",
+            "575",
+            "559",
+            "575"
+          ],
+          "top1_correct": 1,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 1.0,
+          "label_purity_top5": 1.0,
+          "same_patient_rate": 0.2,
+          "cross_patient_top1": 1,
+          "energy_before": -0.7095685232436373,
+          "energy_after": -0.870901714388951,
+          "energy_drop": 0.16133319114531375,
+          "attention_entropy": 4.299546720217449,
+          "top_weight_gap": 0.006626712154194303,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.14076620373661544,
+            "postprandial_spike": 0.4814449119648182,
+            "late_low": 0.202431078471117,
+            "unstable_response": 0.17535780582744936
+          }
+        }
+      ],
+      "failures": [
+        {
+          "window_id": "588-20211024195800-257",
+          "patient_id": "588",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "563-20210915202000-8",
+            "563-20210916113000-11",
+            "588-20211007210600-188",
+            "570-20211207182800-0",
+            "563-20210914161000-3"
+          ],
+          "top_labels": [
+            "controlled_response",
+            "controlled_response",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "563",
+            "563",
+            "588",
+            "570",
+            "563"
+          ],
+          "top1_correct": 0,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 0.3333333333333333,
+          "label_purity_top5": 0.6,
+          "same_patient_rate": 0.2,
+          "cross_patient_top1": 1,
+          "energy_before": -0.5752173185800898,
+          "energy_after": -0.6728782490695441,
+          "energy_drop": 0.09766093048945423,
+          "attention_entropy": 3.049444552867373,
+          "top_weight_gap": 0.020136584502278954,
+          "predicted_label": "controlled_response",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.21663554637115165,
+            "postprandial_spike": 0.33082377806206764,
+            "late_low": 0.17794263467171043,
+            "unstable_response": 0.27459804089507034
+          }
+        },
+        {
+          "window_id": "570-20220117194400-139",
+          "patient_id": "570",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "570-20220101135400-86",
+            "570-20211228192400-74",
+            "570-20211220191300-47",
+            "570-20220102175700-90",
+            "570-20211226095400-66"
+          ],
+          "top_labels": [
+            "controlled_response",
+            "controlled_response",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "570",
+            "570",
+            "570",
+            "570",
+            "570"
+          ],
+          "top1_correct": 0,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 0.3333333333333333,
+          "label_purity_top5": 0.6,
+          "same_patient_rate": 1.0,
+          "cross_patient_top1": 0,
+          "energy_before": -0.4867629827853585,
+          "energy_after": -0.7012001497278557,
+          "energy_drop": 0.2144371669424972,
+          "attention_entropy": 3.770936756024374,
+          "top_weight_gap": 0.019801365947660368,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "late_low",
+          "prototype_distribution": {
+            "controlled_response": 0.2662153818387422,
+            "postprandial_spike": 0.22763059809269606,
+            "late_low": 0.3041812849065692,
+            "unstable_response": 0.20197273516199263
+          }
+        },
+        {
+          "window_id": "588-20211021072000-245",
+          "patient_id": "588",
+          "label": "postprandial_spike",
+          "top_ids": [
+            "588-20211001071200-159",
+            "563-20210921060000-25",
+            "588-20210917071000-97",
+            "588-20211006064900-181",
+            "588-20210922111700-120"
+          ],
+          "top_labels": [
+            "ambiguous",
+            "ambiguous",
+            "postprandial_spike",
+            "postprandial_spike",
+            "postprandial_spike"
+          ],
+          "top_patients": [
+            "588",
+            "563",
+            "588",
+            "588",
+            "588"
+          ],
+          "top1_correct": 0,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 0.3333333333333333,
+          "label_purity_top5": 0.6,
+          "same_patient_rate": 0.8,
+          "cross_patient_top1": 0,
+          "energy_before": -0.6957496928508207,
+          "energy_after": -0.7975210829617668,
+          "energy_drop": 0.10177139011094616,
+          "attention_entropy": 4.201420295201317,
+          "top_weight_gap": 0.013281407804291927,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "unstable_response",
+          "prototype_distribution": {
+            "controlled_response": 0.22317307970334616,
+            "postprandial_spike": 0.2776054769338132,
+            "late_low": 0.11154629724606716,
+            "unstable_response": 0.38767514611677345
+          }
+        },
+        {
+          "window_id": "563-20211105055000-148",
+          "patient_id": "563",
+          "label": "controlled_response",
+          "top_ids": [
+            "591-20211219140000-102",
+            "591-20211221112400-111",
+            "591-20211207195500-40",
+            "591-20211230120000-147",
+            "588-20210901065800-12"
+          ],
+          "top_labels": [
+            "postprandial_spike",
+            "postprandial_spike",
+            "controlled_response",
+            "postprandial_spike",
+            "unstable_response"
+          ],
+          "top_patients": [
+            "591",
+            "591",
+            "591",
+            "591",
+            "588"
+          ],
+          "top1_correct": 0,
+          "top3_hit": 1,
+          "top5_hit": 1,
+          "mrr": 0.3333333333333333,
+          "label_purity_top5": 0.2,
+          "same_patient_rate": 0.0,
+          "cross_patient_top1": 1,
+          "energy_before": -0.756605603236078,
+          "energy_after": -0.8380829678981141,
+          "energy_drop": 0.08147736466203614,
+          "attention_entropy": 4.1659388165911615,
+          "top_weight_gap": 0.01298293667794883,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "unstable_response",
+          "prototype_distribution": {
+            "controlled_response": 0.3321822725213288,
+            "postprandial_spike": 0.13207989507184845,
+            "late_low": 0.1677361404067323,
+            "unstable_response": 0.3680016920000905
+          }
+        },
+        {
+          "window_id": "563-20211028113200-127",
+          "patient_id": "563",
+          "label": "controlled_response",
+          "top_ids": [
+            "563-20210927113000-44",
+            "563-20211003182700-60",
+            "591-20211220151500-107",
+            "575-20211222083500-185",
+            "563-20210921060000-25"
+          ],
+          "top_labels": [
+            "ambiguous",
+            "postprandial_spike",
+            "ambiguous",
+            "postprandial_spike",
+            "ambiguous"
+          ],
+          "top_patients": [
+            "563",
+            "563",
+            "591",
+            "575",
+            "563"
+          ],
+          "top1_correct": 0,
+          "top3_hit": 0,
+          "top5_hit": 0,
+          "mrr": 0.0,
+          "label_purity_top5": 0.0,
+          "same_patient_rate": 0.6,
+          "cross_patient_top1": 0,
+          "energy_before": -0.6313595894696156,
+          "energy_after": -0.7847092856454324,
+          "energy_drop": 0.15334969617581684,
+          "attention_entropy": 4.2407787582890695,
+          "top_weight_gap": 0.012721547693127236,
+          "predicted_label": "postprandial_spike",
+          "prototype_label": "postprandial_spike",
+          "prototype_distribution": {
+            "controlled_response": 0.23762203077415223,
+            "postprandial_spike": 0.30665072147409606,
+            "late_low": 0.1832405534287372,
+            "unstable_response": 0.2724866943230146
+          }
+        }
+      ]
+    },
+    "limitations": [
+      "The dataset contains only six OhioT1DM participants, so cross-patient generalization is limited.",
+      "Research labels are deterministic retrospective categories, not clinical truth.",
+      "The memory vectors encode pre-meal context and do not claim to forecast treatment outcomes.",
+      "Heart-rate coverage varies by patient, so wearable context is informative but incomplete."
+    ]
+  }
+}
