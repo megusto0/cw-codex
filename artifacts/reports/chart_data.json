@@ -2,117 +2,172 @@
   "noise_robustness": [
     {
       "mode": "gaussian_noise",
+      "mode_display": "\u0413\u0430\u0443\u0441\u0441\u043e\u0432 \u0448\u0443\u043c",
       "level": 0.0,
-      "top1_accuracy": 0.410958904109589,
-      "top3_hit_rate": 0.6164383561643836
+      "top1_accuracy": 0.3953488372093023,
+      "top3_hit_rate": 0.5581395348837209
     },
     {
       "mode": "gaussian_noise",
+      "mode_display": "\u0413\u0430\u0443\u0441\u0441\u043e\u0432 \u0448\u0443\u043c",
       "level": 0.03,
-      "top1_accuracy": 0.3972602739726027,
-      "top3_hit_rate": 0.6164383561643836
+      "top1_accuracy": 0.3953488372093023,
+      "top3_hit_rate": 0.5503875968992248
     },
     {
       "mode": "gaussian_noise",
+      "mode_display": "\u0413\u0430\u0443\u0441\u0441\u043e\u0432 \u0448\u0443\u043c",
       "level": 0.06,
-      "top1_accuracy": 0.3835616438356164,
-      "top3_hit_rate": 0.6164383561643836
+      "top1_accuracy": 0.3953488372093023,
+      "top3_hit_rate": 0.5348837209302325
     },
     {
       "mode": "gaussian_noise",
+      "mode_display": "\u0413\u0430\u0443\u0441\u0441\u043e\u0432 \u0448\u0443\u043c",
       "level": 0.1,
-      "top1_accuracy": 0.410958904109589,
-      "top3_hit_rate": 0.589041095890411
+      "top1_accuracy": 0.3953488372093023,
+      "top3_hit_rate": 0.5503875968992248
     },
     {
       "mode": "feature_mask",
+      "mode_display": "\u041c\u0430\u0441\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u0438\u0437\u043d\u0430\u043a\u043e\u0432",
       "level": 0.0,
-      "top1_accuracy": 0.410958904109589,
-      "top3_hit_rate": 0.6164383561643836
+      "top1_accuracy": 0.3953488372093023,
+      "top3_hit_rate": 0.5581395348837209
     },
     {
       "mode": "feature_mask",
+      "mode_display": "\u041c\u0430\u0441\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u0438\u0437\u043d\u0430\u043a\u043e\u0432",
       "level": 0.1,
-      "top1_accuracy": 0.3972602739726027,
-      "top3_hit_rate": 0.6164383561643836
+      "top1_accuracy": 0.4108527131782946,
+      "top3_hit_rate": 0.5116279069767442
     },
     {
       "mode": "feature_mask",
+      "mode_display": "\u041c\u0430\u0441\u043a\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u0438\u0437\u043d\u0430\u043a\u043e\u0432",
       "level": 0.2,
-      "top1_accuracy": 0.4246575342465753,
-      "top3_hit_rate": 0.6301369863013698
+      "top1_accuracy": 0.37209302325581395,
+      "top3_hit_rate": 0.5348837209302325
     }
   ],
   "per_patient": [
     {
-      "patient_id": "559",
-      "top1_accuracy": 0.4,
+      "patient_id": "540",
+      "top1_accuracy": 0.125,
       "top3_hit_rate": 0.5,
-      "mrr": 0.495,
-      "same_patient_rate": 0.12000000000000002,
+      "mrr": 0.32291666666666663,
+      "same_patient_rate": 0.17500000000000002,
+      "count": 8
+    },
+    {
+      "patient_id": "544",
+      "top1_accuracy": 0.5333333333333333,
+      "top3_hit_rate": 0.6,
+      "mrr": 0.5855555555555555,
+      "same_patient_rate": 0.33333333333333337,
+      "count": 15
+    },
+    {
+      "patient_id": "552",
+      "top1_accuracy": 0.7142857142857143,
+      "top3_hit_rate": 0.7142857142857143,
+      "mrr": 0.7142857142857143,
+      "same_patient_rate": 0.17142857142857143,
+      "count": 7
+    },
+    {
+      "patient_id": "559",
+      "top1_accuracy": 0.5,
+      "top3_hit_rate": 0.5,
+      "mrr": 0.5,
+      "same_patient_rate": 0.0,
       "count": 10
     },
     {
       "patient_id": "563",
-      "top1_accuracy": 0.42857142857142855,
+      "top1_accuracy": 0.2857142857142857,
       "top3_hit_rate": 0.6428571428571429,
-      "mrr": 0.5119047619047619,
-      "same_patient_rate": 0.34285714285714286,
+      "mrr": 0.4642857142857143,
+      "same_patient_rate": 0.27142857142857146,
       "count": 14
+    },
+    {
+      "patient_id": "567",
+      "top1_accuracy": 0.6666666666666666,
+      "top3_hit_rate": 0.6666666666666666,
+      "mrr": 0.6666666666666666,
+      "same_patient_rate": 0.0,
+      "count": 3
     },
     {
       "patient_id": "570",
       "top1_accuracy": 0.2222222222222222,
-      "top3_hit_rate": 0.6666666666666666,
-      "mrr": 0.4351851851851851,
-      "same_patient_rate": 0.2222222222222222,
+      "top3_hit_rate": 0.5555555555555556,
+      "mrr": 0.3796296296296296,
+      "same_patient_rate": 0.13333333333333333,
       "count": 9
     },
     {
       "patient_id": "575",
       "top1_accuracy": 0.5833333333333334,
-      "top3_hit_rate": 0.6666666666666666,
-      "mrr": 0.625,
-      "same_patient_rate": 0.30000000000000004,
+      "top3_hit_rate": 0.5833333333333334,
+      "mrr": 0.6041666666666666,
+      "same_patient_rate": 0.23333333333333336,
       "count": 12
     },
     {
+      "patient_id": "584",
+      "top1_accuracy": 0.1111111111111111,
+      "top3_hit_rate": 0.2222222222222222,
+      "mrr": 0.17592592592592593,
+      "same_patient_rate": 0.08888888888888889,
+      "count": 9
+    },
+    {
       "patient_id": "588",
-      "top1_accuracy": 0.26666666666666666,
-      "top3_hit_rate": 0.6,
-      "mrr": 0.39999999999999997,
-      "same_patient_rate": 0.21333333333333337,
+      "top1_accuracy": 0.4,
+      "top3_hit_rate": 0.4666666666666667,
+      "mrr": 0.48000000000000004,
+      "same_patient_rate": 0.14666666666666667,
       "count": 15
     },
     {
       "patient_id": "591",
-      "top1_accuracy": 0.5384615384615384,
+      "top1_accuracy": 0.38461538461538464,
       "top3_hit_rate": 0.6153846153846154,
-      "mrr": 0.5641025641025641,
-      "same_patient_rate": 0.35384615384615387,
+      "mrr": 0.47435897435897434,
+      "same_patient_rate": 0.43076923076923074,
       "count": 13
+    },
+    {
+      "patient_id": "596",
+      "top1_accuracy": 0.35714285714285715,
+      "top3_hit_rate": 0.6428571428571429,
+      "mrr": 0.49047619047619045,
+      "same_patient_rate": 0.21428571428571427,
+      "count": 14
     }
   ],
   "baseline_comparison": {
     "hopfield": {
-      "balanced_accuracy": 0.18737373737373736,
-      "macro_f1": 0.17235023041474654
+      "balanced_accuracy": 0.1913533834586466,
+      "macro_f1": 0.17069518716577542
     },
     "cosine_knn": {
-      "balanced_accuracy": 0.29848484848484846,
-      "macro_f1": 0.25348452634065677
+      "balanced_accuracy": 0.26942355889724307,
+      "macro_f1": 0.25977124183006534
     },
     "nearest_prototype": {
-      "balanced_accuracy": 0.31767676767676767,
-      "macro_f1": 0.24319781966840792
+      "balanced_accuracy": 0.28426065162907266,
+      "macro_f1": 0.21024046434494195
     },
     "patient_majority": {
       "balanced_accuracy": 0.2,
-      "macro_f1": 0.15042735042735042
+      "macro_f1": 0.14829268292682926
     },
     "logistic_regression": {
-      "balanced_accuracy": 0.19444444444444445,
-      "macro_f1": 0.18175270108043215
+      "balanced_accuracy": 0.23533834586466168,
+      "macro_f1": 0.21665565102445475
     }
   }
 }

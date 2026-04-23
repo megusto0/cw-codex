@@ -1,59 +1,83 @@
-# RL Therapy Lab - Hopfield Postprandial Memory
+# Сравнение нейросетевых подходов к поиску сходных постпрандиальных CGM-окон на выборке OhioT1DM
 
-## 1. Motivation
-This coursework project studies whether a modern Hopfield-style associative memory can retrieve interpretable similar postprandial cases from a small OhioT1DM-derived meal-window dataset.
+## 1. Цель проекта
+Проект исследует, как разные нейросетевые архитектуры работают в задаче поиска сходных постпрандиальных CGM-окон на малой выборке OhioT1DM. Основной вопрос формулируется не как поиск универсального победителя, а как сравнение поведения разных retrieval-подходов и проверка того, поддерживает ли доступный объём данных убедительный вывод о превосходстве одной модели.
+Система не является медицинским изделием, не формирует клинические рекомендации и не предназначена для выбора дозы инсулина. Полученные результаты следует интерпретировать как исследовательское сравнение retrieval-подходов, а не как доказательство клинической применимости.
 
-## 2. Dataset
-- Patients: 6
-- Total meal windows extracted: 1303
-- Usable retrospective windows: 474
+## 2. Исходные данные OhioT1DM
+- Пациенты: 12
+- Выделенные окна приёма пищи: 2168
+- Пригодные окна для retrieval-анализа: 830
+- Окна памяти / train: 576
+- Размерность исходного признакового пространства: 91
+Используются CGM, контекст приёма пищи, болюс, базальный инсулин, временной контекст, идентификатор пациента и статистики частоты сердечных сокращений при наличии таких данных.
 
-## 3. Meal-window Extraction
-Each meal window uses a -90 to 0 minute pre-meal CGM context and a 0 to +180 minute post-meal response window. Windows with overlapping meals or insufficient CGM coverage are excluded and tracked transparently.
+## 3. Формирование постпрандиальных окон
+Каждое окно включает предпищевой CGM-фрагмент от -90 до 0 минут и постпрандиальный отклик от 0 до +180 минут. Окна с конфликтующими соседними приёмами пищи, отсутствующим baseline или недостаточным покрытием CGM исключаются с явной фиксацией причины.
+Для честного сравнения используется единый протокол split по всем моделям: одинаковый пул пригодных окон, единый train/test режим и явный запрет self-retrieval leakage.
 
-## 4. Feature Encoding
-The vector combines pre-meal CGM shape, delta-from-baseline, missingness markers, meal context, time context, patient identity, and heart-rate statistics when available.
+## 4. Кодирование признаков
+Общее признаковое представление объединяет форму предпищевого CGM, delta-from-baseline, маску пропусков, meal context, временной контекст, patient context и heart-rate context. Именно это общее представление используется как исходная основа для всех сравнений.
 
-## 5. Hopfield Associative Memory Method
-Memory vectors from the train split are stored in a continuous Hopfield-style retrieval matrix. A held-out query is recalled iteratively using similarity-weighted updates and energy diagnostics.
+## 5. Сравниваемые модели
+### 5.1. Память Хопфилда
+Память Хопфилда используется как ассоциативный retrieval-baseline. Запросное окно проходит итеративное восстановление состояния, после чего анализируются top-k совпадения, траектория энергии и распределение внимания по памяти.
+### 5.2. Сиамская temporal-модель
+Сиамская модель реализует временной энкодер 1D-CNN для предпищевой последовательности CGM, малоглубинный MLP для табличного контекста и общее эмбеддинговое пространство. Retrieval выполняется по косинусному сходству, а метки используются только для организации метрического пространства, а не для перевода проекта в классификационный benchmark.
+### 5.3. Карта Кохонена
+Карта Кохонена применяется как модель топологической самоорганизации. Она полезна не только для neighborhood-based retrieval, но и для визуального анализа локальной структуры признакового пространства.
 
-## 6. Prototypes
-- Controlled response: support 78, purity 0.67, typical carbs 31.0 g.
-- Postprandial spike: support 182, purity 0.67, typical carbs 38.0 g.
-- Late low: support 21, purity 0.40, typical carbs 35.0 g.
-- Unstable response: support 3, purity 0.13, typical carbs 18.0 g.
+## 6. Метрики и protocol fairness
+Основными метриками являются top-1 same-label retrieval, top-3 hit rate, MRR и noise stability. Классификационные показатели, same-patient / cross-patient доли и другие диагностические величины остаются вторичными и используются только как вспомогательный контекст.
+На странице сравнения дополнительно показаны evaluation-only baselines: cosine kNN, DTW kNN, Soft-DTW kNN и nearest prototype. Они не формируют основную историю интерфейса и нужны только для умеренной калибровки результатов.
 
-## 7. Baselines
-The main retrieval comparison uses cosine kNN, nearest prototype matching, patient-majority labeling, and an optional logistic-regression classifier.
+## 7. Экспериментальные результаты
+| Модель | Top-1 | Top-3 | MRR | Noise stability |
+| --- | --- | --- | --- | --- |
+| Память Хопфилда | 39.5% | 55.8% | 0.483 | 97.6% |
+| Сиамская temporal-модель | 39.5% | 64.3% | 0.522 | 101.6% |
+| Карта Кохонена | 48.1% | 77.5% | 0.629 | 99.3% |
 
-## 8. Experiments
-Held-out evaluation is chronological per patient. The report emphasizes retrieval quality, prototype quality, and robustness instead of building a large classifier zoo.
+### Evaluation-only baselines
+- Cosine kNN: top-1 48.1%, top-3 72.1%, MRR 0.607.
+- DTW kNN: top-1 46.5%, top-3 73.6%, MRR 0.598.
+- Soft-DTW kNN: top-1 18.6%, top-3 50.4%, MRR 0.345.
+- Nearest prototype: top-1 35.7%, top-3 65.1%, MRR 0.538.
+- k-Shape: метрика не рассчитана в текущем артефактном срезе.
 
-## 9. Results
-- Hopfield top-1 same-label accuracy: 0.411
-- Hopfield top-3 hit rate: 0.616
-- Hopfield top-5 hit rate: 0.658
-- Mean reciprocal rank: 0.505
-- Average energy drop after recall: 0.123
+На текущем срезе Siamese temporal-модель и карта Кохонена демонстрируют более высокие retrieval-метрики, чем память Хопфилда. При этом победитель зависит от критерия: Siamese лучше интерпретируется как обученное метрическое пространство, тогда как SOM показывает наиболее сильный top-3 и MRR на этом split.
 
-## 10. Failure Analysis
-- Query 588-20211024195800-257 (Postprandial spike) was pulled toward Controlled response with weight gap 0.020.
-- Query 570-20220117194400-139 (Postprandial spike) was pulled toward Controlled response with weight gap 0.020.
-- Query 588-20211021072000-245 (Postprandial spike) was pulled toward Ambiguous response with weight gap 0.013.
+## 8. Прототипы и интерпретация представлений
+- Память Хопфилда: наиболее поддержанный прототип «Постпрандиальный пик» (support 331, purity 0.93). Прототип описывает случаи с выраженным подъемом гликемии после приема пищи при сходном предпищевом контексте.
+- Сиамская temporal-модель: наиболее поддержанный эмбеддинговый прототип «Постпрандиальный пик» (support 331, purity 1.00). Прототип описывает случаи с выраженным подъемом гликемии после приема пищи при сходном предпищевом контексте. В Siamese-режиме прототип описывает компактную область пространства эмбеддингов, а не только средний вектор исходных признаков.
+- Карта Кохонена: наиболее плотная локальная область — ячейка (0, 4) с dominant label «Постпрандиальный пик», support 50 и purity 0.64. В отличие от двух других моделей, SOM описывает не классический прототип класса, а локальную топологическую область карты.
 
-## 11. Interface Overview
-The frontend provides a dashboard, case explorer, retrieval page, prototype gallery, evaluation page, and methodology page focused on similar-case interpretation.
+## 9. Анализ успешных и неудачных случаев
+### 9.1. Выраженные успешные совпадения
+- Память Хопфилда: 544-20270630125000-183, истинная метка «postprandial_spike», ближайшее решение «postprandial_spike». Запрос отнесен к классу «Постпрандиальный пик» уже на первой позиции; высокая неоднозначность, а ближайшие случаи согласованы с преобладанием внутрипациентских совпадений.
+- Сиамская temporal-модель: 588-20211022120000-250, истинная метка «postprandial_spike», ближайшее решение «unstable_response». Запрос отнесен к классу «Постпрандиальный пик» уже на первой позиции; устойчивое извлечение, а ближайшие случаи согласованы с преобладанием внутрипациентских совпадений.
+- Карта Кохонена: 559-20220121043000-159, истинная метка «postprandial_spike», ближайшее решение «postprandial_spike». Окно попадает в область карты с доминирующей меткой «Постпрандиальный пик»; локальная плотность 0.049, квантование 3.089.
 
-## 12. Limitations
-- The dataset contains only six OhioT1DM participants, so cross-patient generalization is limited.
-- Research labels are deterministic retrospective categories, not clinical truth.
-- The memory vectors encode pre-meal context and do not claim to forecast treatment outcomes.
-- Heart-rate coverage varies by patient, so wearable context is informative but incomplete.
+### 9.2. Неудачные и неоднозначные совпадения
+- Память Хопфилда: 591-20220118053900-226, истинная метка «controlled_response», ближайшее решение «postprandial_spike». Запрос с истинной меткой «Контролируемый отклик» смещен к классу «Постпрандиальный пик»; высокая неоднозначность, что указывает на перекрытие паттернов с преобладанием внутрипациентских совпадений.
+- Сиамская temporal-модель: 552-20250526071500-78, истинная метка «postprandial_spike», ближайшее решение «ambiguous». Запрос с истинной меткой «Постпрандиальный пик» смещен к классу «Постпрандиальный пик»; высокая неоднозначность, что указывает на перекрытие паттернов с заметной межпациентской компонентой.
+- Карта Кохонена: 591-20220122191800-248, истинная метка «late_low», ближайшее решение «postprandial_spike». Окно попадает в область карты с доминирующей меткой «Постпрандиальный пик»; локальная плотность 0.054, квантование 2.173.
 
-## 13. Conclusion
-The project demonstrates that associative retrieval can remain valuable even when classification metrics are only moderate, because the remembered cases, prototype structure, and robustness diagnostics are directly inspectable.
+## 10. Почему retrieval-подход методологически оправдан на малой выборке
+При ограниченном числе пациентов retrieval позволяет обсуждать не абстрактную точность модели, а конкретные соответствия между запросом и историческими окнами памяти. Такой подход лучше подходит для малой выборки, поскольку поддерживает case-to-case интерпретацию, анализ неудач и проверку структуры признакового пространства без завышенных заявлений о генерализации.
 
-## Appendix: Qualitative Successes
-- Query 575-20220108191100-274 (Postprandial spike) retrieved the same label at rank 1 with weight gap 0.020.
-- Query 570-20220120115400-148 (Postprandial spike) retrieved the same label at rank 1 with weight gap 0.011.
-- Query 559-20220127170000-178 (Postprandial spike) retrieved the same label at rank 1 with weight gap 0.008.
+## 11. Почему проект не является задачей бесконечного подбора классификаторов
+Интерфейс намеренно ограничен тремя top-level нейросетевыми режимами: память Хопфилда, Siamese temporal-модель и карта Кохонена. Базовые методы вынесены только на страницу сравнения, а близкие по смыслу ablation-варианты не превращаются в отдельные экранные режимы. Это сохраняет проект как coursework по сравнительному neural retrieval, а не как classifier zoo.
+
+## 12. Методологические ограничения
+- В исследовании доступны только шесть пациентов OhioT1DM, поэтому межпациентская переносимость ограничена.
+- Используемые метки являются детерминированными ретроспективными категориями, а не клинической истиной.
+- Эксперимент проводится в ретроспективной постановке и не подтверждает применимость в реальном времени.
+- Часть окон не содержит полных данных по частоте сердечных сокращений, поэтому носимый контекст неполон.
+- Классификационные метрики остаются умеренными и не должны трактоваться как доказательство сильной предиктивной модели.
+- Система не является клинической рекомендацией и не должна использоваться для выбора терапии или дозирования.
+- Различия между моделями наблюдаются на одной и той же малой выборке и не должны трактоваться как клиническое превосходство.
+- Величины для trainable моделей чувствительны к split, случайной инициализации и объёму доступных примеров памяти.
+
+## 13. Заключение
+Доступные данные не дают оснований утверждать, что одна модель является универсально лучшей. Память Хопфилда остаётся наиболее наглядной с точки зрения ассоциативной интерпретации и энергетической диагностики; Siamese temporal-модель показывает сильное качество retrieval в обученном метрическом пространстве; карта Кохонена лучше всего проявляет топологическую структуру данных и локальные neighbourhood-связи. Поэтому итоговый вывод корректнее формулировать как сравнение сильных сторон разных neural retrieval families, а не как поиск клинического победителя.

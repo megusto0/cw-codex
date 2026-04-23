@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score, confusion_m
 
 from .config import Settings, get_settings
 from .memory import ContinuousHopfieldMemory, l2_normalize, stable_softmax
+from .reporting import generate_coursework_report
 
 
 TS_FORMAT = "%d-%m-%Y %H:%M:%S"
@@ -27,14 +28,59 @@ PROTOTYPE_LABELS = [
     "unstable_response",
 ]
 DISPLAY_LABELS = {
-    "controlled_response": "Controlled response",
-    "postprandial_spike": "Postprandial spike",
-    "late_low": "Late low",
-    "unstable_response": "Unstable response",
-    "pre_existing_hyper": "Pre-existing hyperglycemia",
-    "pre_existing_low": "Pre-existing low",
-    "ambiguous": "Ambiguous response",
-    "custom_query": "Custom query",
+    "controlled_response": "Контролируемый отклик",
+    "postprandial_spike": "Постпрандиальный пик",
+    "late_low": "Позднее снижение",
+    "unstable_response": "Нестабильный отклик",
+    "pre_existing_hyper": "Исходная гипергликемия",
+    "pre_existing_low": "Исходная гипогликемия",
+    "ambiguous": "Неоднозначный отклик",
+    "custom_query": "Пользовательский запрос",
+}
+MEAL_SEGMENT_LABELS = {
+    "breakfast": "Завтрак",
+    "lunch": "Обед",
+    "dinner": "Ужин",
+    "overnight": "Ночной интервал",
+}
+SPLIT_LABELS = {
+    "train": "Память",
+    "val": "Валидационный срез",
+    "test": "Отложенная проверка",
+    "excluded": "Исключено",
+    "query": "Запрос",
+}
+FEATURE_BLOCK_LABELS = {
+    "premeal_cgm": "Предпищевой профиль CGM",
+    "premeal_delta": "Отклонение от базовой гликемии",
+    "missingness": "Индикаторы пропусков",
+    "meal_context": "Контекст приема пищи",
+    "time_context": "Временной контекст",
+    "patient_context": "Контекст пациента",
+    "heart_rate_context": "Контекст частоты сердечных сокращений",
+}
+EXCLUSION_REASON_LABELS = {
+    "invalid_carbs": "некорректная запись углеводов",
+    "overlap_previous_meal": "перекрытие с предыдущим приемом пищи",
+    "overlap_next_meal": "перекрытие со следующим приемом пищи",
+    "missing_baseline": "отсутствует базовая точка CGM перед приемом пищи",
+    "insufficient_premeal_cgm": "недостаточное покрытие CGM до приема пищи",
+    "insufficient_postmeal_cgm": "недостаточное покрытие CGM после приема пищи",
+    "missing_premeal_signal": "отсутствует предпищевой сигнал",
+    "pre_existing_state": "окно исключено из-за исходного состояния до приема пищи",
+}
+BASELINE_METHOD_LABELS = {
+    "hopfield": "Ассоциативная память Хопфилда",
+    "cosine_knn": "Косинусное kNN-извлечение",
+    "nearest_prototype": "Ближайший прототип",
+    "patient_majority": "Пациент-специфический модальный класс",
+    "logistic_regression": "Логистическая регрессия",
+}
+PROTOTYPE_INTERPRETATIONS = {
+    "controlled_response": "Прототип описывает окна с умеренным постпрандиальным откликом и сохранением гликемии в целевом диапазоне.",
+    "postprandial_spike": "Прототип описывает случаи с выраженным подъемом гликемии после приема пищи при сходном предпищевом контексте.",
+    "late_low": "Прототип объединяет траектории, в которых после начального ответа формируется позднее снижение гликемии.",
+    "unstable_response": "Прототип фиксирует редкие окна с высокой вариабельностью и слабой устойчивостью профиля.",
 }
 
 
@@ -148,7 +194,7 @@ class FeatureEncoder:
         train_matrix = raw_matrix[train_mask]
 
         if train_matrix.size == 0:
-            raise RuntimeError("No training windows available to fit the feature encoder")
+            raise RuntimeError("Отсутствуют train-окна для обучения кодировщика признаков.")
 
         encoder.mean_[encoder.scale_mask] = np.mean(train_matrix[:, encoder.scale_mask], axis=0)
         encoder.scale_[encoder.scale_mask] = np.std(train_matrix[:, encoder.scale_mask], axis=0)
@@ -223,7 +269,7 @@ class FeatureEncoder:
             "patient_id": str(payload.get("patient_id", "custom")),
             "meal_time": payload.get("meal_time", "custom"),
             "meal_segment": meal_segment,
-            "meal_type": payload.get("meal_type", "Custom"),
+            "meal_type": payload.get("meal_type", "Пользовательское окно"),
             "carbs": carbs,
             "bolus": bolus,
             "has_bolus": float(bolus > 0.0),
@@ -244,7 +290,7 @@ class FeatureEncoder:
             "full_curve_missingness": [float(value) for value in premeal_missingness]
             + [1.0] * (len(self.full_minutes) - len(premeal_values)),
             "label": "custom_query",
-            "label_reason": "User-defined exploratory query.",
+            "label_reason": "Пользовательский исследовательский запрос без клинической интерпретации.",
             "response_peak": baseline,
             "response_nadir": baseline,
             "rise_from_baseline": 0.0,
@@ -352,6 +398,68 @@ def extract_meal_hour(value: Any) -> int:
     return 12
 
 
+def display_label(label: str) -> str:
+    return DISPLAY_LABELS.get(label, label.replace("_", " "))
+
+
+def display_meal_segment(segment: str) -> str:
+    return MEAL_SEGMENT_LABELS.get(segment, segment)
+
+
+def display_split(split: str) -> str:
+    return SPLIT_LABELS.get(split, split)
+
+
+def display_feature_block(block: str) -> str:
+    return FEATURE_BLOCK_LABELS.get(block, block.replace("_", " "))
+
+
+def display_exclusion_reason(reason: str | None) -> str:
+    if not reason:
+        return "не указана"
+    return EXCLUSION_REASON_LABELS.get(reason, reason.replace("_", " "))
+
+
+def display_baseline_method(name: str) -> str:
+    return BASELINE_METHOD_LABELS.get(name, name.replace("_", " "))
+
+
+def format_share(value: float) -> str:
+    return f"{value * 100:.1f}%"
+
+
+def classify_uncertainty(gap: float, entropy: float) -> str:
+    if gap < 0.03 or entropy > 5.0:
+        return "высокая неоднозначность"
+    if gap < 0.08 or entropy > 4.5:
+        return "умеренная неоднозначность"
+    return "устойчивое извлечение"
+
+
+def prototype_meaning(label: str) -> str:
+    return PROTOTYPE_INTERPRETATIONS.get(label, "Прототип отражает усредненный профиль соответствующего класса окон.")
+
+
+def build_case_summary(record: dict[str, Any]) -> str:
+    predicted = display_label(record["predicted_label"])
+    observed = display_label(record["label"])
+    uncertainty = classify_uncertainty(record["top_weight_gap"], record["attention_entropy"])
+    patient_scope = (
+        "с преобладанием внутрипациентских совпадений"
+        if record["same_patient_rate"] >= 0.5
+        else "с заметной межпациентской компонентой"
+    )
+    if record["top1_correct"]:
+        return (
+            f"Запрос отнесен к классу «{predicted}» уже на первой позиции; {uncertainty}, "
+            f"а ближайшие случаи согласованы {patient_scope}."
+        )
+    return (
+        f"Запрос с истинной меткой «{observed}» смещен к классу «{predicted}»; "
+        f"{uncertainty}, что указывает на перекрытие паттернов {patient_scope}."
+    )
+
+
 def json_ready(value: Any) -> Any:
     if isinstance(value, dict):
         return {key: json_ready(inner) for key, inner in value.items()}
@@ -412,8 +520,9 @@ def parse_ohio_directory(data_dir: Path) -> dict[str, PatientStreams]:
 
 def _parse_simple_stream(node: ET.Element | None, value_keys: Sequence[str], text_keys: Sequence[str] = ()) -> pd.DataFrame:
     records: list[dict[str, Any]] = []
+    columns = ["timestamp", *value_keys, *text_keys]
     if node is None:
-        return pd.DataFrame(columns=["timestamp", *value_keys, *text_keys])
+        return pd.DataFrame(columns=columns)
     for event in node.findall("event"):
         timestamp = parse_timestamp(event.attrib.get("ts"))
         if timestamp is None:
@@ -424,13 +533,14 @@ def _parse_simple_stream(node: ET.Element | None, value_keys: Sequence[str], tex
         for key in text_keys:
             record[key] = (event.attrib.get(key) or "").strip()
         records.append(record)
-    return pd.DataFrame(records)
+    return pd.DataFrame(records, columns=columns)
 
 
 def _parse_interval_stream(node: ET.Element | None, value_keys: Sequence[str], text_keys: Sequence[str] = ()) -> pd.DataFrame:
     records: list[dict[str, Any]] = []
+    columns = ["timestamp", "end_timestamp", *value_keys, *text_keys]
     if node is None:
-        return pd.DataFrame(columns=["timestamp", "end_timestamp", *value_keys, *text_keys])
+        return pd.DataFrame(columns=columns)
     for event in node.findall("event"):
         start = parse_timestamp(event.attrib.get("ts_begin"))
         end = parse_timestamp(event.attrib.get("ts_end"))
@@ -442,7 +552,7 @@ def _parse_interval_stream(node: ET.Element | None, value_keys: Sequence[str], t
         for key in text_keys:
             record[key] = (event.attrib.get(key) or "").strip()
         records.append(record)
-    return pd.DataFrame(records)
+    return pd.DataFrame(records, columns=columns)
 
 
 def _combine_frames(frames: Sequence[pd.DataFrame], dedupe_columns: Sequence[str]) -> pd.DataFrame:
@@ -520,18 +630,18 @@ def label_window(metrics: dict[str, float]) -> tuple[str, str]:
     post_tir = metrics["post_tir"]
 
     if baseline < 70:
-        return "pre_existing_low", "Baseline glucose was already below 70 mg/dL before the meal."
+        return "pre_existing_low", "Перед приемом пищи базовая гликемия уже была ниже 70 мг/дл."
     if baseline > 180:
-        return "pre_existing_hyper", "Baseline glucose was already above 180 mg/dL before the meal."
+        return "pre_existing_hyper", "Перед приемом пищи базовая гликемия уже превышала 180 мг/дл."
     if nadir < 70 and baseline >= 80:
-        return "late_low", "The post-meal nadir dropped below 70 mg/dL after the meal."
+        return "late_low", "В интервале после приема пищи зарегистрировано позднее снижение ниже 70 мг/дл."
     if baseline < 180 and (rise >= 60 or (peak > 180 and rise >= 40)):
-        return "postprandial_spike", "Glucose rose sharply above the pre-meal baseline after eating."
+        return "postprandial_spike", "После приема пищи наблюдался выраженный подъем гликемии относительно исходного уровня."
     if post_range >= 100 or post_cv >= 0.36:
-        return "unstable_response", "The post-meal window had a wide range or high variability."
+        return "unstable_response", "Постпрандиальное окно характеризуется широким диапазоном или высокой вариабельностью."
     if 70 <= baseline <= 180 and peak <= 180 and nadir >= 70 and rise < 40 and post_tir >= 0.7:
-        return "controlled_response", "The post-meal response stayed largely in range without a major excursion."
-    return "ambiguous", "The response did not cleanly match the main retrospective patterns."
+        return "controlled_response", "Постпрандиальный отклик в основном оставался в целевом диапазоне без крупной экскурсии."
+    return "ambiguous", "Окно не соответствует ни одному из основных ретроспективных паттернов с достаточной определенностью."
 
 
 def extract_windows(streams_by_patient: dict[str, PatientStreams], settings: Settings) -> tuple[list[dict[str, Any]], dict[str, int]]:
@@ -653,8 +763,9 @@ def extract_windows(streams_by_patient: dict[str, PatientStreams], settings: Set
                 "window_id": f"{patient_id}-{meal_time.strftime('%Y%m%d%H%M%S')}-{meal_index}",
                 "patient_id": patient_id,
                 "meal_time": meal_time,
-                "meal_type": meal_row.get("type") or "Meal",
+                "meal_type": meal_row.get("type") or "Прием пищи",
                 "meal_segment": meal_segment,
+                "meal_segment_display": display_meal_segment(meal_segment),
                 "carbs": float(carbs or 0.0),
                 "bolus": bolus,
                 "has_bolus": has_bolus,
@@ -684,13 +795,15 @@ def extract_windows(streams_by_patient: dict[str, PatientStreams], settings: Set
                 "post_cv": post_cv,
                 "post_tir": post_tir,
                 "label": label,
-                "label_display": DISPLAY_LABELS[label],
+                "label_display": display_label(label),
                 "label_reason": label_reason,
                 "pre_coverage": pre_coverage,
                 "post_coverage": post_coverage,
                 "split": "excluded",
+                "split_display": display_split("excluded"),
                 "usable_for_memory": usable_for_memory,
                 "exclusion_reason": exclusion_reason,
+                "exclusion_reason_display": display_exclusion_reason(exclusion_reason),
             }
             windows.append(window)
     return windows, dict(exclusion_counts)
@@ -729,6 +842,7 @@ def assign_splits(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             else:
                 split = "test"
             window["split"] = split
+            window["split_display"] = display_split(split)
     return windows
 
 
@@ -763,13 +877,15 @@ def build_prototypes(
 
         prototypes[label] = {
             "label": label,
-            "label_display": DISPLAY_LABELS[label],
+            "label_display": display_label(label),
             "support_size": len(members),
+            "support_fraction": float(len(members) / max(len(train_windows), 1)),
             "purity": purity,
             "vector": centroid.tolist(),
             "mean_curve_minutes": members[0]["full_curve_minutes"],
             "mean_curve_values": mean_curve.tolist(),
             "representative_window_ids": representative_windows,
+            "interpretation_text": prototype_meaning(label),
             "typical_context": {
                 "carbs": float(np.median([window["carbs"] for window in members])),
                 "bolus": float(np.median([window["bolus"] for window in members])),
@@ -777,6 +893,9 @@ def build_prototypes(
                 "trend_30m": float(np.median([window["trend_30m"] for window in members])),
                 "trend_90m": float(np.median([window["trend_90m"] for window in members])),
                 "meal_segment_mode": Counter([window["meal_segment"] for window in members]).most_common(1)[0][0],
+                "meal_segment_mode_display": display_meal_segment(
+                    Counter([window["meal_segment"] for window in members]).most_common(1)[0][0]
+                ),
             },
         }
     return prototypes
@@ -866,9 +985,12 @@ def evaluate_models(
             prototype_similarities = prototype_matrix @ query_norm
             prototype_label = prototype_labels[int(np.argmax(prototype_similarities))]
             prototype_distribution = stable_softmax(prototype_similarities).tolist()
+            sorted_prototype = np.sort(np.asarray(prototype_distribution, dtype=float))
+            prototype_gap = float(sorted_prototype[-1] - sorted_prototype[-2]) if len(sorted_prototype) > 1 else float(sorted_prototype[-1])
         else:
             prototype_label = "ambiguous"
             prototype_distribution = []
+            prototype_gap = 0.0
 
         patient_majority_predictions.append(patient_majority.get(query_window["patient_id"], Counter(train_labels).most_common(1)[0][0]))
         prototype_predictions.append(prototype_label)
@@ -883,33 +1005,42 @@ def evaluate_models(
         entropy = float(-np.sum(np.clip(retrieval["weights"], 1e-12, 1.0) * np.log(np.clip(retrieval["weights"], 1e-12, 1.0))))
         sorted_weights = np.sort(np.asarray(retrieval["weights"], dtype=float))
         gap = float(sorted_weights[-1] - sorted_weights[-2]) if len(sorted_weights) > 1 else float(sorted_weights[-1])
+        top_similarity = float(retrieval["top_k"][0]["similarity"]) if retrieval["top_k"] else 0.0
+        second_similarity = float(retrieval["top_k"][1]["similarity"]) if len(retrieval["top_k"]) > 1 else 0.0
+        top_weight = float(retrieval["top_k"][0]["weight"]) if retrieval["top_k"] else 0.0
+        second_weight = float(retrieval["top_k"][1]["weight"]) if len(retrieval["top_k"]) > 1 else 0.0
+        case_record = {
+            "window_id": query_window["window_id"],
+            "patient_id": query_window["patient_id"],
+            "label": query_window["label"],
+            "top_ids": top_ids,
+            "top_labels": top_labels,
+            "top_patients": top_patients,
+            "top1_correct": top_labels[0] == query_window["label"],
+            "top3_hit": query_window["label"] in top_labels[:3],
+            "top5_hit": query_window["label"] in top_labels[:5],
+            "mrr": 1.0 / rank if rank else 0.0,
+            "label_purity_top5": float(np.mean([label == query_window["label"] for label in top_labels])) if top_labels else 0.0,
+            "same_patient_rate": same_patient_rate,
+            "cross_patient_top1": bool(top_patients and top_patients[0] != query_window["patient_id"]),
+            "energy_before": memory_model.energy(query_vector, beta=settings.hopfield_beta),
+            "energy_after": float(retrieval["trajectory"][-1]["energy"]) if retrieval["trajectory"] else memory_model.energy(query_vector),
+            "energy_drop": memory_model.energy(query_vector, beta=settings.hopfield_beta)
+            - (float(retrieval["trajectory"][-1]["energy"]) if retrieval["trajectory"] else memory_model.energy(query_vector)),
+            "attention_entropy": entropy,
+            "top_weight_gap": gap,
+            "top1_similarity": top_similarity,
+            "top2_similarity": second_similarity,
+            "top1_weight": top_weight,
+            "top2_weight": second_weight,
+            "predicted_label": predicted_label,
+            "prototype_label": prototype_label,
+            "prototype_top_gap": prototype_gap,
+            "prototype_distribution": dict(zip(prototype_labels, prototype_distribution)),
+        }
+        case_record["summary_text"] = build_case_summary(case_record)
 
-        hopfield_records.append(
-            {
-                "window_id": query_window["window_id"],
-                "patient_id": query_window["patient_id"],
-                "label": query_window["label"],
-                "top_ids": top_ids,
-                "top_labels": top_labels,
-                "top_patients": top_patients,
-                "top1_correct": top_labels[0] == query_window["label"],
-                "top3_hit": query_window["label"] in top_labels[:3],
-                "top5_hit": query_window["label"] in top_labels[:5],
-                "mrr": 1.0 / rank if rank else 0.0,
-                "label_purity_top5": float(np.mean([label == query_window["label"] for label in top_labels])) if top_labels else 0.0,
-                "same_patient_rate": same_patient_rate,
-                "cross_patient_top1": bool(top_patients and top_patients[0] != query_window["patient_id"]),
-                "energy_before": memory_model.energy(query_vector, beta=settings.hopfield_beta),
-                "energy_after": float(retrieval["trajectory"][-1]["energy"]) if retrieval["trajectory"] else memory_model.energy(query_vector),
-                "energy_drop": memory_model.energy(query_vector, beta=settings.hopfield_beta)
-                - (float(retrieval["trajectory"][-1]["energy"]) if retrieval["trajectory"] else memory_model.energy(query_vector)),
-                "attention_entropy": entropy,
-                "top_weight_gap": gap,
-                "predicted_label": predicted_label,
-                "prototype_label": prototype_label,
-                "prototype_distribution": dict(zip(prototype_labels, prototype_distribution)),
-            }
-        )
+        hopfield_records.append(case_record)
 
     prototype_purity = float(np.mean([prototype["purity"] for prototype in prototypes.values()])) if prototypes else 0.0
     baseline_comparison = {
@@ -935,8 +1066,20 @@ def evaluate_models(
             }
         )
 
-    successes = sorted([record for record in hopfield_records if record["top1_correct"]], key=lambda item: item["top_weight_gap"], reverse=True)
-    failures = sorted([record for record in hopfield_records if not record["top1_correct"]], key=lambda item: item["top_weight_gap"], reverse=True)
+    successes = sorted(
+        [record for record in hopfield_records if record["top1_correct"]],
+        key=lambda item: item["top_weight_gap"],
+        reverse=True,
+    )
+    failures = sorted(
+        [record for record in hopfield_records if not record["top1_correct"]],
+        key=lambda item: (item["top_weight_gap"], -item["attention_entropy"]),
+    )
+    ambiguous_cases = sorted(hopfield_records, key=lambda item: (item["top_weight_gap"], -item["attention_entropy"]))
+    prototype_confusions = sorted(
+        [record for record in hopfield_records if record["prototype_label"] != record["label"]],
+        key=lambda item: (item["prototype_top_gap"], item["top_weight_gap"]),
+    )
 
     retrieval_metrics = {
         "top1_accuracy": float(np.mean([record["top1_correct"] for record in hopfield_records])),
@@ -962,17 +1105,48 @@ def evaluate_models(
         "retrieval_metrics": retrieval_metrics,
         "diagnostics": diagnostics,
         "baselines": baseline_comparison,
+        "baseline_note": (
+            "Классификационные базовые методы сохранены только как вторичный ориентир. "
+            "Основной объект анализа в проекте — качество извлечения похожих случаев, а не подбор максимума по единственной метрике."
+        ),
         "per_patient": per_patient,
         "noise_robustness": noise_robustness,
+        "noise_note": (
+            "Гауссов шум моделирует малые возмущения признакового вектора, а маскирование признаков имитирует потерю части контекста. "
+            "Снижение top-k метрик при росте искажения интерпретируется как деградация устойчивости извлечения."
+        ),
+        "same_vs_cross_analysis": {
+            "same_patient_top1_rate": diagnostics["same_patient_top1_rate"],
+            "cross_patient_top1_rate": diagnostics["cross_patient_top1_rate"],
+            "interpretation": (
+                "Преобладание внутрипациентских совпадений ожидаемо, поскольку векторы содержат пациент-специфический контекст."
+            ),
+            "cross_patient_meaning": (
+                "Межпациентские совпадения остаются содержательными, когда предпищевой профиль и контекст приема пищи указывают на сходную форму отклика."
+            ),
+            "limitation": (
+                "Слишком высокая доля внутрипациентских совпадений ограничивает переносимость retrieval-подхода между пациентами."
+            ),
+        },
         "qualitative_examples": {
             "successes": successes[:5],
             "failures": failures[:5],
         },
+        "failure_analysis": {
+            "ambiguous_cases": ambiguous_cases[:5],
+            "prototype_confusions": prototype_confusions[:5],
+            "interpretation": (
+                "Неудачные извлечения чаще возникают там, где gap между первыми весами мал, энтропия распределения внимания повышена, "
+                "а прототипы частично перекрываются по признаковым блокам."
+            ),
+        },
         "limitations": [
-            "The dataset contains only six OhioT1DM participants, so cross-patient generalization is limited.",
-            "Research labels are deterministic retrospective categories, not clinical truth.",
-            "The memory vectors encode pre-meal context and do not claim to forecast treatment outcomes.",
-            "Heart-rate coverage varies by patient, so wearable context is informative but incomplete.",
+            "В исследовании доступны только шесть пациентов OhioT1DM, поэтому межпациентская переносимость ограничена.",
+            "Используемые метки являются детерминированными ретроспективными категориями, а не клинической истиной.",
+            "Эксперимент проводится в ретроспективной постановке и не подтверждает применимость в реальном времени.",
+            "Часть окон не содержит полных данных по частоте сердечных сокращений, поэтому носимый контекст неполон.",
+            "Классификационные метрики остаются умеренными и не должны трактоваться как доказательство сильной предиктивной модели.",
+            "Система не является клинической рекомендацией и не должна использоваться для выбора терапии или дозирования.",
         ],
     }
     chart_data = {
@@ -1014,6 +1188,7 @@ def evaluate_noise_robustness(
         results.append(
             {
                 "mode": "gaussian_noise",
+                "mode_display": "Гауссов шум",
                 "level": sigma,
                 "top1_accuracy": float(np.mean(top1_scores)),
                 "top3_hit_rate": float(np.mean(top3_scores)),
@@ -1036,6 +1211,7 @@ def evaluate_noise_robustness(
         results.append(
             {
                 "mode": "feature_mask",
+                "mode_display": "Маскирование признаков",
                 "level": ratio,
                 "top1_accuracy": float(np.mean(top1_scores)),
                 "top3_hit_rate": float(np.mean(top3_scores)),
@@ -1069,8 +1245,8 @@ def make_dashboard(
     retrieval_metrics = evaluation["retrieval_metrics"]
     return {
         "title": settings.project_name,
-        "subtitle": "A retrieval-first coursework demo of modern Hopfield associative memory on OhioT1DM meal windows.",
-        "disclaimer": "Retrospective educational demo only. Not clinical advice, not a treatment recommender, and not a dosing tool.",
+        "subtitle": "Ретроспективная исследовательская демонстрация ассоциативной памяти Хопфилда для извлечения похожих постпрандиальных случаев из OhioT1DM.",
+        "disclaimer": "Интерфейс предназначен только для исследовательского анализа. Он не является клинической системой, не формирует рекомендации по терапии и не используется для расчета доз.",
         "patients_count": len(streams_by_patient),
         "total_meal_windows": len(windows),
         "usable_meal_windows": len(usable_windows),
@@ -1078,42 +1254,63 @@ def make_dashboard(
         "feature_dimension": len(encoder.feature_names),
         "headline_metrics": retrieval_metrics,
         "headline_summary": (
-            f"Hopfield retrieval reached {retrieval_metrics['top3_hit_rate']:.1%} top-3 hit rate and "
-            f"{retrieval_metrics['top1_accuracy']:.1%} top-1 same-label accuracy on held-out meal windows."
+            f"На отложенных окнах память Хопфилда достигла {format_share(retrieval_metrics['top3_hit_rate'])} попаданий в top-3 "
+            f"и {format_share(retrieval_metrics['top1_accuracy'])} совпадений метки в top-1; "
+            "результат демонстрирует содержательность retrieval-подхода, но не подтверждает клиническую пригодность."
+        ),
+        "scientific_summary": [
+            f"{len(streams_by_patient)} пациентов, {len(windows)} выделенных окон приема пищи.",
+            f"{len(usable_windows)} окон пригодны для анализа памяти, {split_distribution.get('train', 0)} используются как элементы памяти.",
+            f"{len(encoder.feature_names)} признаков описывают предпищевой CGM, контекст приема пищи, время, пациента и ЧСС.",
+            f"Top-1 извлечение: {format_share(retrieval_metrics['top1_accuracy'])}; top-3 извлечение: {format_share(retrieval_metrics['top3_hit_rate'])}; MRR: {retrieval_metrics['mean_reciprocal_rank']:.3f}.",
+        ],
+        "interpretation_note": (
+            "Что показывает этот блок: сводка фиксирует масштаб выборки, размер памяти и ключевые retrieval-метрики, "
+            "которые следует интерпретировать как качество поиска похожих случаев, а не как клинический прогноз."
         ),
         "label_distribution": {label: label_distribution.get(label, 0) for label in sorted(label_distribution)},
         "split_distribution": dict(split_distribution),
         "exclusion_reasons": exclusions,
+        "limitations_panel": evaluation["limitations"],
         "reused_visual_ideas": [
-            "A left navigation rail with calm card-based sections.",
-            "Chart containers with restrained borders and readable spacing.",
-            "Dashboard-style metric cards and clean comparison tables.",
+            "Левая навигационная колонка с спокойным ритмом карточек.",
+            "Сдержанные контейнеры графиков с аккуратными границами и читаемыми отступами.",
+            "Иерархия метрик и сравнительных таблиц в стиле исследовательской панели.",
         ],
         "not_reused_from_glucoscope": [
-            "No Glucoscope backend modules or routers.",
-            "No Glucoscope meal-processing, analytics, RL, or XML parsing code.",
-            "No therapy recommendation wording or dose logic.",
+            "Не используются backend-модули и маршруты Glucoscope.",
+            "Не используются код обработки приемов пищи, аналитика, RL-логика или XML-парсинг из Glucoscope.",
+            "Не используется язык терапевтических рекомендаций и логика дозирования.",
         ],
     }
 
 
-def make_about_payload(encoder: FeatureEncoder, settings: Settings) -> dict[str, Any]:
+def _legacy_make_about_payload_unused(encoder: FeatureEncoder, settings: Settings) -> dict[str, Any]:
     return {
         "title": settings.project_name,
-        "plain_language": "This project stores postprandial meal windows as remembered feature vectors and retrieves similar historical cases with a continuous Hopfield-style memory.",
+        "plain_language": "Проект кодирует постпрандиальные окна как фиксированные векторы признаков и извлекает похожие исторические случаи с помощью непрерывной ассоциативной памяти Хопфилда.",
         "why_memory_based": [
-            "Small retrospective datasets benefit from similar-case retrieval because the model can show concrete precedents instead of pretending to make strong clinical predictions.",
-            "Hopfield recall provides weights, entropy, and energy-like diagnostics that make the retrieval process inspectable.",
+            "На малой ретроспективной выборке retrieval-подход позволяет опираться на конкретные исторические прецеденты, а не имитировать сильную клиническую предикцию.",
+            "Процедура recall в памяти Хопфилда возвращает веса, энтропию и энергетическую траекторию, поэтому процесс извлечения остается наблюдаемым и интерпретируемым.",
+        ],
+        "why_retrieval_justified": [
+            "При шести пациентах и ограниченном числе окон переусложнение модели повышает риск нестабильной оценки и переобучения.",
+            "Похожие случаи и прототипы дают наблюдаемую связь между входным контекстом и исторической памятью системы.",
+            "Retrieval-подход естественно поддерживает анализ сильных и неудачных случаев, а также исследование межпациентского сходства.",
+        ],
+        "why_not_classifier_zoo": [
+            "Цель проекта состоит не в бесконечном подборе классификаторов, а в демонстрации ассоциативной памяти как исследовательского инструмента.",
+            "Классификационные базовые методы сохранены только как вторичный ориентир и не определяют основную ценность интерфейса.",
         ],
         "vector_construction": {
             "feature_blocks": [
-                "Pre-meal CGM values on a fixed -90 to 0 minute grid.",
-                "Pre-meal delta-from-baseline values on the same grid.",
-                "Missingness indicators for interpolated or absent sequence points.",
-                "Meal context: carbs, bolus, baseline glucose, trends, variability, and active basal.",
-                "Time context: circular time-of-day encoding and meal segment.",
-                "Patient context: one-hot patient identity.",
-                "Heart-rate context: mean, variability, extrema, and missingness flag.",
+                "Значения CGM на фиксированной сетке от -90 до 0 минут перед приемом пищи.",
+                "Отклонения CGM от базовой гликемии на той же сетке.",
+                "Индикаторы пропусков и интерполяции для последовательности CGM.",
+                "Контекст приема пищи: углеводы, болюс, базовая гликемия, тренды, вариабельность и активный базал.",
+                "Временной контекст: циклическое кодирование времени суток и сегмент приема пищи.",
+                "Контекст пациента: one-hot код идентификатора пациента.",
+                "Контекст ЧСС: среднее, вариабельность, экстремумы и флаг отсутствия данных.",
             ],
             "feature_dimension": len(encoder.feature_names),
         },
@@ -1123,10 +1320,221 @@ def make_about_payload(encoder: FeatureEncoder, settings: Settings) -> dict[str,
             "recall": "q_next = sum_i w_i x_i",
             "energy": "E(q) = -logsumexp(beta * Xq)/beta + 0.5 ||q||^2",
         },
+        "safety_statements": [
+            "Система не является клинической рекомендацией.",
+            "Извлеченное сходство не эквивалентно терапевтическому совету.",
+            "Интерфейс не предназначен для назначения инсулина или изменения лечения.",
+        ],
         "limitations": [
-            "Retrospective labels are research categories, not clinical truth.",
-            "The system retrieves remembered patterns and does not recommend treatment changes.",
-            "A six-patient dataset cannot support strong real-world claims.",
+            "Ретроспективные метки являются исследовательскими категориями, а не клинической истиной.",
+            "Система извлекает запомненные паттерны и не предлагает изменение терапии.",
+            "Выборка из шести пациентов не поддерживает сильные внешние обобщения.",
+        ],
+    }
+
+
+def _legacy_generate_report_markdown_unused(
+    dashboard: dict[str, Any],
+    evaluation: dict[str, Any],
+    prototypes: dict[str, dict[str, Any]],
+    windows: Sequence[dict[str, Any]],
+) -> str:
+    retrieval_metrics = evaluation["retrieval_metrics"]
+    diagnostics = evaluation["diagnostics"]
+    failures = evaluation["qualitative_examples"]["failures"]
+    successes = evaluation["qualitative_examples"]["successes"]
+    failure_analysis = evaluation.get("failure_analysis", {})
+    same_vs_cross = evaluation.get("same_vs_cross_analysis", {})
+
+    lines = [
+        f"# {dashboard['title']}",
+        "",
+        "## 1. Цель проекта",
+        "Проект направлен на исследование того, может ли современная ассоциативная память Хопфилда использоваться как интерпретируемая система извлечения похожих постпрандиальных случаев на малой ретроспективной выборке OhioT1DM.",
+        "",
+        "## 2. Исходные данные",
+        f"- Количество пациентов: {dashboard['patients_count']}",
+        f"- Всего выделено окон приема пищи: {dashboard['total_meal_windows']}",
+        f"- Пригодных для анализа окон: {dashboard['usable_meal_windows']}",
+        f"- Размер памяти (train-окна): {dashboard['memory_size']}",
+        f"- Размерность признакового пространства: {dashboard['feature_dimension']}",
+        "",
+        "## 3. Формирование окон приема пищи",
+        "Каждое окно включает предпищевой контекст CGM на интервале от -90 до 0 минут и постпрандиальный ответ на интервале от 0 до +180 минут. Окна с перекрывающимися приемами пищи, отсутствующей базовой точкой или недостаточным покрытием CGM исключаются с явной фиксацией причины.",
+        "",
+        "## 4. Кодирование признаков",
+        "Вектор признаков объединяет предпищевую форму CGM, отклонение от базовой гликемии, индикаторы пропусков, контекст приема пищи, временной контекст, идентификатор пациента и статистики ЧСС при наличии соответствующих данных.",
+        "",
+        "## 5. Ассоциативная память Хопфилда",
+        "Векторы train-окна формируют непрерывную матрицу памяти Хопфилда. Для отложенного запроса выполняется итеративный recall с весами внимания, после чего анализируются top-k совпадения, траектория энергии и концентрация весов.",
+        "",
+        "## 6. Прототипы и их интерпретация",
+    ]
+    for label, prototype in prototypes.items():
+        lines.append(
+            f"- {display_label(label)}: поддержка {prototype['support_size']} окон ({format_share(prototype['support_fraction'])}), "
+            f"чистота {prototype['purity']:.2f}, типичные углеводы {prototype['typical_context']['carbs']:.1f} г, "
+            f"доминирующий сегмент {display_meal_segment(prototype['typical_context']['meal_segment_mode'])}. {prototype['interpretation_text']}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## 7. Базовые методы сравнения",
+            "В качестве вторичного ориентира использованы косинусное kNN-извлечение, ближайший прототип, пациент-специфический модальный класс и логистическая регрессия. Эти методы не образуют основную цель проекта и служат только для калибровки умеренности результатов.",
+            "",
+            "### Почему проект не является задачей бесконечного подбора классификаторов",
+            "Ценность работы состоит в интерпретируемом retrieval-подходе: система показывает конкретные исторические случаи, прототипы и диагностические признаки неопределенности. Добавление большого числа классификаторов увеличило бы объем сравнений, но не улучшило бы объяснимость и защитимость проекта на малой выборке.",
+            "",
+            "## 8. Экспериментальные результаты",
+            "Отложенная проверка строится хронологически по каждому пациенту. Основной акцент сделан на качестве извлечения, структуре прототипов, устойчивости к искажению входа и честной фиксации ограничений.",
+            "",
+            f"- Top-1 совпадение метки: {retrieval_metrics['top1_accuracy']:.3f}",
+            f"- Попадание в top-3: {retrieval_metrics['top3_hit_rate']:.3f}",
+            f"- Попадание в top-5: {retrieval_metrics['top5_hit_rate']:.3f}",
+            f"- Средний reciprocal rank (MRR): {retrieval_metrics['mean_reciprocal_rank']:.3f}",
+            f"- Среднее снижение энергии после recall-процедуры: {diagnostics['average_energy_drop']:.3f}",
+            f"- Средняя энтропия распределения внимания: {diagnostics['average_attention_entropy']:.3f}",
+            f"- Доля внутрипациентских top-1 совпадений: {same_vs_cross.get('same_patient_top1_rate', 0.0):.3f}",
+            f"- Доля межпациентских top-1 совпадений: {same_vs_cross.get('cross_patient_top1_rate', 0.0):.3f}",
+            "",
+            "Краткая интерпретация: retrieval-подход демонстрирует умеренное, но содержательное качество поиска похожих случаев. Основная исследовательская ценность состоит в наблюдаемости памяти и возможности анализировать причины совпадений, а не в максимизации единственного классификационного числа.",
+            "",
+            "## 9. Анализ успешных и неудачных случаев",
+            "Примеры корректных и некорректных извлечений используются для объяснения поведения модели на уровне отдельных окон.",
+            "",
+            "### Успешные случаи",
+        ]
+    )
+    if successes:
+        for success in successes[:3]:
+            lines.append(
+                f"- {success['window_id']}: истинная метка «{display_label(success['label'])}», "
+                f"извлечение корректно на позиции 1, разрыв весов {success['top_weight_gap']:.3f}. {success['summary_text']}"
+            )
+    else:
+        lines.append("- Явно выраженные успешные случаи в текущем отложенном срезе не выделены.")
+
+    lines.extend(["", "### Неудачные и неоднозначные случаи"])
+    if failures:
+        for failure in failures[:3]:
+            lines.append(
+                f"- {failure['window_id']}: истинная метка «{display_label(failure['label'])}», top-1 случай относится к классу "
+                f"«{display_label(failure['top_labels'][0])}», разрыв весов {failure['top_weight_gap']:.3f}. {failure['summary_text']}"
+            )
+    else:
+        lines.append("- В текущем отложенном срезе не зарегистрированы ошибки top-1 извлечения.")
+
+    lines.extend(["", "### Прототипные конфликты"])
+    for example in failure_analysis.get("prototype_confusions", [])[:3]:
+        lines.append(
+            f"- {example['window_id']}: истинный класс «{display_label(example['label'])}», ближайший прототип "
+            f"«{display_label(example['prototype_label'])}». Это указывает на частичное перекрытие классов в пространстве признаков."
+        )
+
+    lines.extend(
+        [
+            "",
+            "## 10. Методологические ограничения",
+            "Ограничения не скрываются и должны учитываться при защите проекта:",
+        ]
+    )
+    for limitation in evaluation["limitations"]:
+        lines.append(f"- {limitation}")
+
+    lines.extend(
+        [
+            "",
+            "### Почему retrieval-подход методологически оправдан на малой выборке",
+            "При ограниченном числе пациентов retrieval обеспечивает проверяемую связь между запросом и историческими окнами памяти, не требуя завышенных заявлений о генерализации. Такой подход лучше согласуется с учебной целью проекта: показать, как ассоциативная память структурирует сходство случаев и где именно эта структура начинает ошибаться.",
+            "",
+            "## 11. Заключение",
+            "Проект демонстрирует, что ассоциативная память Хопфилда может быть успешно использована как ретроспективный инструмент извлечения похожих постпрандиальных случаев. Несмотря на умеренные классификационные показатели, система предоставляет защищаемую исследовательскую ценность за счет интерпретируемых top-k совпадений, прототипов, диагностик неопределенности и явного анализа неудачных случаев. При этом проект не является клинической системой и не должен использоваться как источник терапевтических рекомендаций.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _load_optional_json(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _format_case_summary(example: dict[str, Any], model_label: str) -> str:
+    predicted_labels = example.get("top_labels") or [example.get("predicted_label", "ambiguous")]
+    predicted_label = display_label(predicted_labels[0])
+    top_gap = float(example.get("top1_similarity", 0.0)) - float(example.get("top2_similarity", 0.0))
+    return (
+        f"- {model_label}: {example['window_id']}, истинная метка «{display_label(example['label'])}», "
+        f"top-1 класс «{predicted_label}», разрыв top-1/top-2 {top_gap:.3f}, "
+        f"доля внутрипациентских совпадений в top-5 {float(example.get('same_patient_rate', 0.0)):.2f}. "
+        f"{example['summary_text']}"
+    )
+
+
+def make_about_payload(encoder: FeatureEncoder, settings: Settings) -> dict[str, Any]:
+    return {
+        "title": settings.project_name,
+        "model_note": (
+            "Интерфейс поддерживает два retrieval-движка: память Хопфилда по умолчанию и "
+            "Siamese retrieval-модель как единственный нейросетевой сравнительный вариант. "
+            "Оба режима используются только в ретроспективной исследовательской демонстрации."
+        ),
+        "plain_language": (
+            "Проект кодирует постпрандиальные окна как фиксированные представления и извлекает "
+            "похожие исторические случаи либо через непрерывную ассоциативную память Хопфилда, "
+            "либо через Siamese-энкодер метрического пространства."
+        ),
+        "why_memory_based": [
+            "На малой ретроспективной выборке retrieval-подход позволяет опираться на конкретные исторические прецеденты, а не имитировать сильную клиническую предикцию.",
+            "Память Хопфилда возвращает веса, энтропию и энергетическую траекторию recall-процедуры, поэтому механизм извлечения остается наблюдаемым.",
+            "Siamese-модель добавляет нейросетевое пространство эмбеддингов, но сохраняет ту же задачу: поиск похожих случаев, а не соревнование классификаторов.",
+        ],
+        "why_retrieval_justified": [
+            "При шести пациентах и ограниченном числе окон переусложнение модели повышает риск нестабильной оценки и переобучения.",
+            "Похожие случаи и прототипы дают наблюдаемую связь между входным контекстом и исторической памятью системы.",
+            "Retrieval-подход естественно поддерживает анализ сильных и неудачных случаев, исследование межпациентского сходства и диагностику неопределенности.",
+        ],
+        "why_not_classifier_zoo": [
+            "Цель проекта состоит не в бесконечном подборе классификаторов, а в сравнении двух интерпретируемых retrieval-представлений на одной и той же задаче.",
+            "Классификационные базовые методы сохранены только как вторичный ориентир и не определяют основную ценность интерфейса.",
+            "Siamese-модель включена как единственный нейросетевой retrieval-сравнитель, чтобы показать альтернативное метрическое пространство без перегрузки проекта.",
+        ],
+        "vector_construction": {
+            "feature_blocks": [
+                "Значения CGM на фиксированной сетке от -90 до 0 минут перед приемом пищи.",
+                "Отклонения CGM от базовой гликемии на той же сетке.",
+                "Индикаторы пропусков и интерполяции для последовательности CGM.",
+                "Контекст приема пищи: углеводы, болюс, базовая гликемия, тренды, вариабельность и активный базал.",
+                "Временной контекст: циклическое кодирование времени суток и сегмент приема пищи.",
+                "Контекст пациента: one-hot код идентификатора пациента.",
+                "Контекст ЧСС: среднее, вариабельность, экстремумы и флаг отсутствия данных.",
+            ],
+            "feature_dimension": len(encoder.feature_names),
+        },
+        "hopfield_equations": {
+            "similarity": "s_i = x_i · q",
+            "weights": "w = softmax(beta * s)",
+            "recall": "q_next = sum_i w_i x_i",
+            "energy": "E(q) = -logsumexp(beta * Xq)/beta + 0.5 ||q||^2",
+        },
+        "safety_statements": [
+            "Система не является клинической рекомендацией.",
+            "Извлеченное сходство не эквивалентно терапевтическому совету.",
+            "Интерфейс не предназначен для назначения инсулина или изменения лечения.",
+            "Сходство между случаями не должно интерпретироваться как совет по терапии.",
+        ],
+        "limitations": [
+            "Ретроспективные метки являются исследовательскими категориями, а не клинической истиной.",
+            "Система извлекает запомненные паттерны и не предлагает изменение терапии.",
+            "Выборка из шести пациентов не поддерживает сильные внешние обобщения.",
+            "Контекст ЧСС доступен не для всех окон и остается неполным.",
+            "Даже улучшение retrieval-метрик у Siamese-модели не снимает ограничений малой выборки и retrospective-only постановки.",
         ],
     }
 
@@ -1136,91 +1544,281 @@ def generate_report_markdown(
     evaluation: dict[str, Any],
     prototypes: dict[str, dict[str, Any]],
     windows: Sequence[dict[str, Any]],
+    settings: Settings | None = None,
 ) -> str:
+    settings = settings or get_settings()
+    _ = windows
     retrieval_metrics = evaluation["retrieval_metrics"]
     diagnostics = evaluation["diagnostics"]
-    usable_windows = [window for window in windows if window["usable_for_memory"]]
     failures = evaluation["qualitative_examples"]["failures"]
     successes = evaluation["qualitative_examples"]["successes"]
+    failure_analysis = evaluation.get("failure_analysis", {})
+    same_vs_cross = evaluation.get("same_vs_cross_analysis", {})
+
+    siamese_evaluation = _load_optional_json(settings.siamese_metrics_path) or {}
+    siamese_config = _load_optional_json(settings.siamese_config_path) or {}
+    siamese_prototypes = _load_optional_json(settings.siamese_prototypes_path) or {}
+    siamese_retrieval = siamese_evaluation.get("retrieval_metrics", {})
+    siamese_diagnostics = siamese_evaluation.get("diagnostics", {})
+    siamese_examples = siamese_evaluation.get("qualitative_examples", {})
+    siamese_failure_analysis = siamese_evaluation.get("failure_analysis", {})
+    siamese_same_vs_cross = siamese_evaluation.get("same_vs_cross_analysis", {})
+    siamese_available = bool(siamese_evaluation)
+
+    baseline_labels = {
+        "cosine_knn": "косинусное kNN-извлечение",
+        "nearest_prototype": "ближайший прототип",
+        "patient_majority": "пациент-специфический модальный класс",
+        "logistic_regression": "логистическая регрессия",
+    }
+    baseline_summary = ", ".join(
+        baseline_labels[key] for key in baseline_labels if key in evaluation.get("baselines", {})
+    )
 
     lines = [
-        f"# {dashboard['title']}",
+        f"# {settings.project_name}",
         "",
-        "## 1. Motivation",
-        "This coursework project studies whether a modern Hopfield-style associative memory can retrieve interpretable similar postprandial cases from a small OhioT1DM-derived meal-window dataset.",
+        "## 1. Цель проекта",
+        (
+            "Проект посвящен retrieval-first анализу постпрандиальных окон OhioT1DM. Базовым "
+            "движком остается ассоциативная память Хопфилда, а в качестве единственного "
+            "нейросетевого сравнения добавлена Siamese retrieval-модель с временным энкодером "
+            "и общим пространством эмбеддингов. Цель состоит не в расширении набора "
+            "классификаторов, а в сопоставлении двух способов извлечения похожих случаев, "
+            "интерпретации прототипов и анализа неопределенности."
+        ),
         "",
-        "## 2. Dataset",
-        f"- Patients: {dashboard['patients_count']}",
-        f"- Total meal windows extracted: {dashboard['total_meal_windows']}",
-        f"- Usable retrospective windows: {dashboard['usable_meal_windows']}",
+        "## 2. Исходные данные",
+        f"- Количество пациентов: {dashboard['patients_count']}",
+        f"- Всего выделено окон приема пищи: {dashboard['total_meal_windows']}",
+        f"- Пригодных для анализа окон: {dashboard['usable_meal_windows']}",
+        f"- Размер памяти train-окон: {dashboard['memory_size']}",
+        f"- Размерность исходного признакового пространства: {dashboard['feature_dimension']}",
         "",
-        "## 3. Meal-window Extraction",
-        "Each meal window uses a -90 to 0 minute pre-meal CGM context and a 0 to +180 minute post-meal response window. Windows with overlapping meals or insufficient CGM coverage are excluded and tracked transparently.",
+        "## 3. Формирование окон приема пищи",
+        (
+            "Каждое окно содержит предпищевой контекст CGM на интервале от -90 до 0 минут и "
+            "постпрандиальный отклик на интервале от 0 до +180 минут. Окна с перекрывающимися "
+            "приемами пищи, отсутствующей базовой точкой или недостаточным покрытием CGM "
+            "исключаются с явной фиксацией причины. Разделение на train/val/test выполняется "
+            "хронологически по пациентам, чтобы минимизировать утечку информации."
+        ),
         "",
-        "## 4. Feature Encoding",
-        "The vector combines pre-meal CGM shape, delta-from-baseline, missingness markers, meal context, time context, patient identity, and heart-rate statistics when available.",
+        "## 4. Кодирование признаков",
+        (
+            "Общее представление окна объединяет предпищевую форму CGM, отклонение от базовой "
+            "гликемии, маску пропусков, контекст приема пищи, временной контекст, идентификатор "
+            "пациента и статистики ЧСС при наличии соответствующих данных. Это представление "
+            "используется как для памяти Хопфилда, так и для формирования входов Siamese-модели."
+        ),
         "",
-        "## 5. Hopfield Associative Memory Method",
-        "Memory vectors from the train split are stored in a continuous Hopfield-style retrieval matrix. A held-out query is recalled iteratively using similarity-weighted updates and energy diagnostics.",
+        "## 5. Ассоциативная память Хопфилда",
+        (
+            "Векторы train-окон формируют непрерывную матрицу памяти Хопфилда. Для отложенного "
+            "запроса выполняется итеративный recall с весами внимания, после чего анализируются "
+            "top-k совпадения, траектория энергии, концентрация весов и сходство по блокам "
+            "признаков. Этот режим остается моделью по умолчанию и основной точкой интерпретации."
+        ),
         "",
-        "## 6. Prototypes",
+        "## 6. Сиамская retrieval-модель",
+        (
+            "Siamese-модель реализована как компактный temporal encoder: 1D-CNN по предпищевой "
+            "последовательности CGM с каналами исходного сигнала, отклонения от базового уровня "
+            "и маски пропусков, а также MLP по табличному контексту окна. После слияния ветвей "
+            "получается нормализованный эмбеддинг, а retrieval выполняется по косинусному "
+            "сходству в пространстве эмбеддингов."
+        ),
     ]
-    for label, prototype in prototypes.items():
-        lines.append(
-            f"- {DISPLAY_LABELS[label]}: support {prototype['support_size']}, purity {prototype['purity']:.2f}, typical carbs {prototype['typical_context']['carbs']:.1f} g."
+    if siamese_available:
+        lines.extend(
+            [
+                f"- Размерность пространства эмбеддингов: {int(siamese_config.get('embedding_dim', settings.siamese_embedding_dim))}",
+                (
+                    "Модель обучается в offline-режиме на train-памяти с supervised contrastive "
+                    "loss; метки используются только для организации метрического пространства, а "
+                    "не для переопределения проекта в классификационный бенчмарк."
+                ),
+            ]
         )
+    else:
+        lines.append(
+            "- Артефакты Siamese-модели отсутствуют; при пересборке проекта этот раздел автоматически заполняется после offline-обучения."
+        )
+
     lines.extend(
         [
             "",
-            "## 7. Baselines",
-            "The main retrieval comparison uses cosine kNN, nearest prototype matching, patient-majority labeling, and an optional logistic-regression classifier.",
-            "",
-            "## 8. Experiments",
-            "Held-out evaluation is chronological per patient. The report emphasizes retrieval quality, prototype quality, and robustness instead of building a large classifier zoo.",
-            "",
-            "## 9. Results",
-            f"- Hopfield top-1 same-label accuracy: {retrieval_metrics['top1_accuracy']:.3f}",
-            f"- Hopfield top-3 hit rate: {retrieval_metrics['top3_hit_rate']:.3f}",
-            f"- Hopfield top-5 hit rate: {retrieval_metrics['top5_hit_rate']:.3f}",
-            f"- Mean reciprocal rank: {retrieval_metrics['mean_reciprocal_rank']:.3f}",
-            f"- Average energy drop after recall: {diagnostics['average_energy_drop']:.3f}",
-            "",
-            "## 10. Failure Analysis",
+            "## 7. Прототипы и их интерпретация",
+            (
+                "В проекте используются два типа прототипов. Для Хопфилда это центры в исходном "
+                "признаковом пространстве, связанные с усредненным профилем окна. Для "
+                "Siamese-модели это средние точки в пространстве представлений, описывающие "
+                "регион эмбеддингов, а не буквальный средний набор исходных признаков."
+            ),
         ]
     )
-    if failures:
-        for failure in failures[:3]:
-            lines.append(
-                f"- Query {failure['window_id']} ({DISPLAY_LABELS[failure['label']]}) was pulled toward {DISPLAY_LABELS[failure['top_labels'][0]]} with weight gap {failure['top_weight_gap']:.3f}."
+    all_prototype_labels = list(dict.fromkeys([*prototypes.keys(), *siamese_prototypes.keys()]))
+    for label in all_prototype_labels:
+        hopfield_proto = prototypes.get(label)
+        siamese_proto = siamese_prototypes.get(label)
+        fragments: list[str] = []
+        if hopfield_proto:
+            fragments.append(
+                f"Хопфилд-прототип: поддержка {hopfield_proto['support_size']} окон ({format_share(hopfield_proto['support_fraction'])}), "
+                f"чистота {hopfield_proto['purity']:.2f}, типичные углеводы {hopfield_proto['typical_context']['carbs']:.1f} г, "
+                f"доминирующий сегмент {display_meal_segment(hopfield_proto['typical_context']['meal_segment_mode'])}."
             )
-    else:
-        lines.append("- No failures were recorded in the current held-out slice.")
+        if siamese_proto:
+            fragments.append(
+                f"Siamese-прототип: поддержка {siamese_proto['support_size']} окон ({format_share(siamese_proto['support_fraction'])}), "
+                f"чистота {siamese_proto['purity']:.2f} в пространстве эмбеддингов."
+            )
+        interpretation_text = ""
+        if hopfield_proto:
+            interpretation_text = hopfield_proto["interpretation_text"]
+        elif siamese_proto:
+            interpretation_text = siamese_proto.get("interpretation_text", "")
+        lines.append(f"- {display_label(label)}. {' '.join(fragments)} {interpretation_text}".strip())
+
     lines.extend(
         [
             "",
-            "## 11. Interface Overview",
-            "The frontend provides a dashboard, case explorer, retrieval page, prototype gallery, evaluation page, and methodology page focused on similar-case interpretation.",
+            "## 8. Базовые методы сравнения",
+            (
+                "Вторичными ориентирами сохранены только простые методы сравнения: "
+                f"{baseline_summary}. Эти методы используются для калибровки умеренности "
+                "результатов и не определяют основную структуру интерфейса."
+            ),
             "",
-            "## 12. Limitations",
+            "### Почему проект не является задачей бесконечного подбора классификаторов",
+            (
+                "Главная ценность работы состоит в наблюдаемом процессе извлечения похожих "
+                "случаев, прототипов и диагностик неопределенности. Добавление большого числа "
+                "классификаторов увеличило бы объем сравнений, но ухудшило бы методологическую "
+                "чистоту и объяснимость на малой ретроспективной выборке."
+            ),
+            "",
+            "### Почему retrieval-подход методологически оправдан на малой выборке",
+            (
+                "При ограниченном числе пациентов retrieval обеспечивает проверяемую связь между "
+                "запросом и историческими окнами памяти. Такой подход позволяет обсуждать сильные, "
+                "слабые и неоднозначные случаи без завышенных заявлений о генерализации или "
+                "клинической пригодности."
+            ),
+            "",
+            "## 9. Экспериментальные результаты",
+            "Сравнение моделей носит исследовательский характер и не предназначено для клинической интерпретации.",
+            "",
+            f"- Хопфилд: top-1 {retrieval_metrics['top1_accuracy']:.3f}, top-3 {retrieval_metrics['top3_hit_rate']:.3f}, top-5 {retrieval_metrics['top5_hit_rate']:.3f}, MRR {retrieval_metrics['mean_reciprocal_rank']:.3f}.",
+            f"- Хопфилд: среднее снижение энергии {diagnostics['average_energy_drop']:.3f}, средняя энтропия {diagnostics['average_attention_entropy']:.3f}, внутрипациентские top-1 {same_vs_cross.get('same_patient_top1_rate', 0.0):.3f}, межпациентские top-1 {same_vs_cross.get('cross_patient_top1_rate', 0.0):.3f}.",
+        ]
+    )
+    if siamese_available:
+        lines.extend(
+            [
+                f"- Siamese: top-1 {siamese_retrieval.get('top1_accuracy', 0.0):.3f}, top-3 {siamese_retrieval.get('top3_hit_rate', 0.0):.3f}, top-5 {siamese_retrieval.get('top5_hit_rate', 0.0):.3f}, MRR {siamese_retrieval.get('mean_reciprocal_rank', 0.0):.3f}.",
+                f"- Siamese: средний gap top-1/top-2 {siamese_diagnostics.get('average_similarity_gap', 0.0):.3f}, средняя энтропия {siamese_diagnostics.get('average_attention_entropy', 0.0):.3f}, внутрипациентские top-1 {siamese_same_vs_cross.get('same_patient_top1_rate', 0.0):.3f}, межпациентские top-1 {siamese_same_vs_cross.get('cross_patient_top1_rate', 0.0):.3f}.",
+                (
+                    "На текущем отложенном срезе Siamese-модель дает более высокие "
+                    "retrieval-метрики, чем Hopfield, однако это преимущество следует трактовать "
+                    "как сравнение двух представлений на одной и той же малой выборке, а не как "
+                    "доказательство универсального превосходства."
+                ),
+            ]
+        )
+    else:
+        lines.append("- Siamese-метрики будут добавлены в отчёт после offline-обучения и пересборки артефактов.")
+    lines.extend(
+        [
+            (
+                "Общая интерпретация: обе модели пригодны для научно-исследовательской демонстрации "
+                "similar-case retrieval. Хопфилд подчеркивает recall-динамику и энергию, а "
+                "Siamese-модель показывает альтернативное метрическое пространство без перехода к "
+                "classifier-zoo постановке."
+            ),
+            "",
+            "## 10. Анализ успешных и неудачных случаев",
+            "Ниже приведены характерные примеры, показывающие как устойчивые совпадения, так и пограничные или ошибочные retrieval-ситуации.",
+            "",
+            "### Успешные случаи",
+        ]
+    )
+    if successes:
+        lines.append(_format_case_summary(successes[0], "Хопфилд"))
+    else:
+        lines.append("- Хопфилд: явно выраженные успешные случаи в текущем срезе не выделены.")
+    siamese_successes = siamese_examples.get("successes", [])
+    if siamese_successes:
+        lines.append(_format_case_summary(siamese_successes[0], "Сиамская retrieval-модель"))
+    elif siamese_available:
+        lines.append("- Сиамская retrieval-модель: явно выраженные успешные случаи в текущем срезе не выделены.")
+
+    lines.extend(["", "### Неудачные и неоднозначные случаи"])
+    if failures:
+        lines.append(_format_case_summary(failures[0], "Хопфилд"))
+    else:
+        lines.append("- Хопфилд: в текущем срезе не зарегистрированы ошибки top-1 извлечения.")
+    siamese_failures = siamese_examples.get("failures", [])
+    if siamese_failures:
+        lines.append(_format_case_summary(siamese_failures[0], "Сиамская retrieval-модель"))
+    elif siamese_available:
+        lines.append("- Сиамская retrieval-модель: явные ошибки top-1 извлечения в текущем срезе не выделены.")
+
+    lines.extend(["", "### Прототипные конфликты"])
+    hopfield_confusions = failure_analysis.get("prototype_confusions", [])
+    siamese_confusions = siamese_failure_analysis.get("prototype_confusions", [])
+    if hopfield_confusions:
+        example = hopfield_confusions[0]
+        lines.append(
+            f"- Хопфилд: {example['window_id']}, истинный класс «{display_label(example['label'])}», "
+            f"ближайший прототип «{display_label(example['prototype_label'])}». Это указывает на частичное перекрытие классов в исходном признаковом пространстве."
+        )
+    if siamese_confusions:
+        example = siamese_confusions[0]
+        lines.append(
+            f"- Сиамская retrieval-модель: {example['window_id']}, истинный класс «{display_label(example['label'])}», "
+            f"ближайший прототип «{display_label(example['prototype_label'])}». Конфликт показывает неоднозначную позицию окна в пространстве эмбеддингов."
+        )
+    if not hopfield_confusions and not siamese_confusions:
+        lines.append("- Явно выраженные прототипные конфликты в текущем срезе не выделены.")
+
+    lines.extend(
+        [
+            "",
+            "## 11. Методологические ограничения",
+            "Ограничения не скрываются и должны учитываться при интерпретации результатов и защите проекта:",
         ]
     )
     for limitation in evaluation["limitations"]:
         lines.append(f"- {limitation}")
+    if siamese_available:
+        lines.append(
+            "- Siamese-энкодер обучается на той же малой train-памяти, поэтому его преимущества чувствительны к split, случайной инициализации и объему доступных примеров."
+        )
+
     lines.extend(
         [
             "",
-            "## 13. Conclusion",
-            "The project demonstrates that associative retrieval can remain valuable even when classification metrics are only moderate, because the remembered cases, prototype structure, and robustness diagnostics are directly inspectable.",
-            "",
-            "## Appendix: Qualitative Successes",
+            "## 12. Заключение",
+            (
+                "Проект демонстрирует retrieval-first подход к анализу постпрандиальных окон: "
+                "память Хопфилда обеспечивает наблюдаемый recall с энергетической диагностикой, а "
+                "Siamese-модель добавляет нейросетевое метрическое пространство для того же класса "
+                "задач. Основной вклад состоит в интерпретируемом извлечении похожих случаев, "
+                "анализе прототипов и честной фиксации ограничений. Проект не является "
+                "клинической системой и не должен использоваться как источник терапевтических "
+                "рекомендаций."
+            ),
         ]
     )
-    if successes:
-        for success in successes[:3]:
-            lines.append(
-                f"- Query {success['window_id']} ({DISPLAY_LABELS[success['label']]}) retrieved the same label at rank 1 with weight gap {success['top_weight_gap']:.3f}."
-            )
     return "\n".join(lines)
+
+
+def refresh_report_documents(bundle: dict[str, Any], settings: Settings) -> str:
+    report_markdown = generate_coursework_report(bundle, settings)
+    settings.latest_report_path.write_text(report_markdown, encoding="utf-8")
+    settings.coursework_report_path.write_text(report_markdown, encoding="utf-8")
+    return report_markdown
 
 
 def build_runtime_bundle(force: bool = False, settings: Settings | None = None) -> dict[str, Any]:
@@ -1240,7 +1838,7 @@ def build_runtime_bundle(force: bool = False, settings: Settings | None = None) 
     windows = assign_splits(windows)
     memory_windows = [window for window in windows if window["usable_for_memory"]]
     if not memory_windows:
-        raise RuntimeError("No usable meal windows were extracted from OhioT1DM.")
+        raise RuntimeError("Из OhioT1DM не удалось извлечь пригодные окна приема пищи.")
 
     encoder, feature_matrix = FeatureEncoder.fit(memory_windows)
     index_by_window_id = {window["window_id"]: index for index, window in enumerate(memory_windows)}
@@ -1257,7 +1855,6 @@ def build_runtime_bundle(force: bool = False, settings: Settings | None = None) 
     evaluation, chart_data = evaluate_models(windows, feature_matrix, encoder, index_by_window_id, memory_model, prototypes, settings)
     dashboard = make_dashboard(streams_by_patient, windows, encoder, evaluation, exclusions, settings)
     about = make_about_payload(encoder, settings)
-    report_markdown = generate_report_markdown(dashboard, evaluation, prototypes, windows)
 
     bundle = {
         "generated_at": pd.Timestamp.now(tz=timezone.utc).isoformat(),
@@ -1306,8 +1903,7 @@ def build_runtime_bundle(force: bool = False, settings: Settings | None = None) 
         encoding="utf-8",
     )
     settings.chart_data_path.write_text(json.dumps(bundle["chart_data"], indent=2), encoding="utf-8")
-    settings.latest_report_path.write_text(report_markdown, encoding="utf-8")
-    settings.coursework_report_path.write_text(report_markdown, encoding="utf-8")
+    refresh_report_documents(bundle, settings)
     with settings.runtime_bundle_path.open("wb") as handle:
         pickle.dump(bundle, handle)
     return bundle

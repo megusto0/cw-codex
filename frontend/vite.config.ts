@@ -1,18 +1,21 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
 
 const backendPort = process.env.BACKEND_PORT ?? '8000';
-const backendHost = process.env.BACKEND_HOST ?? '127.0.0.1';
+const apiProxyTarget = process.env.VITE_API_BASE ?? `http://127.0.0.1:${backendPort}`;
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5174,
+    host: '127.0.0.1',
     proxy: {
-      '/api': {
-        target: `http://${backendHost}:${backendPort}`,
-        changeOrigin: true,
-      },
+      '/api': apiProxyTarget,
     },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    maxWorkers: 1,
+    minWorkers: 1,
   },
 });

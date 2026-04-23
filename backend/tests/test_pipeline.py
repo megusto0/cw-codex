@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
+from app.config import get_settings
 from app.memory import ContinuousHopfieldMemory
 from app.pipeline import build_runtime_bundle
+from app.service import get_service
+from app.siamese import _sequence_and_tabular_views, train_siamese_encoder
 
 
 def test_feature_vector_shape_stability(fitted_encoder):
@@ -55,3 +60,35 @@ def test_no_retrieval_leakage_or_self_retrieval_in_held_out_bundle():
     train_ids = {item["window_id"] for item in bundle["memory_model"].metadata}
     test_ids = {window["window_id"] for window in bundle["windows"] if window["split"] == "test"}
     assert train_ids.isdisjoint(test_ids)
+
+
+def test_service_loads_all_model_artifacts():
+    service = get_service()
+    engines = service.ensure_engines()
+    assert {"hopfield", "siamese_temporal", "som"} <= set(engines)
+    assert engines["hopfield"].dashboard()["memory_size"] > 0
+    assert engines["siamese_temporal"].dashboard()["memory_size"] > 0
+    assert engines["som"].dashboard()["memory_size"] > 0
+
+
+def test_siamese_sequence_and_tabular_views_shape(fitted_encoder):
+    encoder, matrix = fitted_encoder
+    sequence, tabular = _sequence_and_tabular_views(matrix, encoder)
+    assert sequence.shape == (4, 3, 19)
+    assert tabular.shape[0] == 4
+    assert tabular.shape[1] == matrix.shape[1] - (19 * 3)
+
+
+def test_siamese_encoder_outputs_unit_norm_embeddings(fitted_encoder, synthetic_windows):
+    encoder, matrix = fitted_encoder
+    sequence, tabular = _sequence_and_tabular_views(matrix, encoder)
+    settings = replace(get_settings(), siamese_epochs=2, siamese_embedding_dim=16)
+    labels = ["controlled_response", "controlled_response", "late_low", "late_low"]
+    model, _ = train_siamese_encoder(sequence, tabular, labels, settings)
+
+    import torch
+
+    with torch.no_grad():
+        embeddings = model(torch.from_numpy(sequence), torch.from_numpy(tabular)).numpy()
+    norms = np.linalg.norm(embeddings, axis=1)
+    assert np.allclose(norms, 1.0, atol=1e-4)

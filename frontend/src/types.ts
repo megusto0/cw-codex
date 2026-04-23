@@ -1,19 +1,14 @@
-export interface DashboardData {
-  title: string;
-  subtitle: string;
-  disclaimer: string;
-  patients_count: number;
-  total_meal_windows: number;
-  usable_meal_windows: number;
-  memory_size: number;
-  feature_dimension: number;
-  headline_metrics: Record<string, number>;
-  headline_summary: string;
-  label_distribution: Record<string, number>;
-  split_distribution: Record<string, number>;
-  exclusion_reasons: Record<string, number>;
-  reused_visual_ideas: string[];
-  not_reused_from_glucoscope: string[];
+export type ModelKey = 'hopfield' | 'siamese_temporal' | 'som';
+
+export interface ModelDescriptor {
+  key: ModelKey;
+  label: string;
+  scientific_description: string;
+  short_description?: string;
+  representation_name?: string;
+  prototype_name?: string;
+  similarity_name?: string;
+  supports_iterative_recall?: boolean;
 }
 
 export interface WindowRecord {
@@ -22,176 +17,197 @@ export interface WindowRecord {
   meal_time: string;
   meal_type: string;
   meal_segment: string;
+  meal_segment_display?: string;
   carbs: number;
   bolus: number;
-  has_bolus: number;
-  carbs_per_unit: number;
-  active_basal: number;
   baseline_glucose: number;
   trend_30m: number;
   trend_90m: number;
-  premeal_mean: number;
-  premeal_std: number;
-  premeal_cv: number;
   hr_mean: number;
-  hr_std: number;
-  hr_min: number;
-  hr_max: number;
-  heart_rate_missing: number;
-  response_peak: number;
-  response_nadir: number;
-  rise_from_baseline: number;
-  post_range: number;
-  post_cv: number;
-  post_tir: number;
+  heart_rate_missing: number | boolean;
   label: string;
-  label_display: string;
-  label_reason: string;
-  pre_coverage: number;
-  post_coverage: number;
+  label_display?: string;
+  label_reason?: string;
   split: string;
+  split_display?: string;
   usable_for_memory: boolean;
-  exclusion_reason?: string | null;
+  exclusion_reason_display?: string | null;
   full_curve_minutes: number[];
   full_curve_values: Array<number | null>;
-  full_curve_missingness: number[];
-  premeal_values: number[];
-  premeal_delta: number[];
-  premeal_missingness: number[];
-  memory_index?: number | null;
 }
 
-export interface RetrievalStep {
-  step: number;
-  vector: number[];
-  energy: number;
-  entropy: number;
-  top_weight_gap: number;
-  dominant_memory: {
-    window_id: string;
-    label: string;
-    patient_id: string;
+export interface ModelsResponse {
+  default_model: ModelKey;
+  models: ModelDescriptor[];
+}
+
+export interface OverviewData {
+  title: string;
+  subtitle: string;
+  disclaimer: string;
+  selected_model: ModelDescriptor;
+  available_models: ModelDescriptor[];
+  headline_metrics: {
+    top1_accuracy: number;
+    top3_hit_rate: number;
+    mean_reciprocal_rank: number;
+    representation_size: number;
+    representation_label: string;
+    noise_stability?: number | null;
   };
+  dataset_strip: {
+    patients: number;
+    extracted_windows: number;
+    usable_windows: number;
+    memory_windows: number;
+  };
+  model_comparison: Array<{
+    key: ModelKey;
+    label: string;
+    scientific_description: string;
+    top1_accuracy: number;
+    top3_hit_rate: number;
+    mean_reciprocal_rank: number;
+    noise_stability?: number | null;
+    secondary_metrics: Record<string, number | null>;
+    additional_metrics: Record<string, number | null | undefined>;
+  }>;
+  chart: {
+    kind: 'label_distribution';
+    title: string;
+    data: Array<{ key: string; label: string; value: number }>;
+  };
+  interpretation: string;
+  limitations: string[];
+  exclusions: Record<string, number>;
 }
 
-export interface RetrievedMemory {
-  index: number;
+export interface RetrieveNeighbor {
+  rank: number;
   window_id: string;
   label: string;
+  label_display?: string;
   patient_id: string;
   similarity: number;
-  weight: number;
   same_patient: boolean;
+  relation_badge: string;
+  reason: string;
+  map_distance?: number | null;
   window: WindowRecord;
-  feature_block_similarity: Record<string, number>;
-  top_blocks: Array<[string, number]>;
-  explanation_text: string;
 }
 
-export interface RetrievalResponse {
+export interface RetrieveResponse {
+  model: ModelDescriptor;
   query_window: WindowRecord;
-  query_vector: number[];
-  recalled_vector: number[];
-  recalled_steps: RetrievalStep[];
-  top_k_memories: RetrievedMemory[];
-  similarities: number[];
-  weights: number[];
-  energy_values: number[];
-  prototype_distribution: Record<string, number>;
-  plain_language_explanation_text: string;
+  summary_text: string;
+  primary_metrics: Record<string, string | number | null>;
+  neighbors: RetrieveNeighbor[];
+  chart_payload:
+    | {
+        kind: 'energy_trajectory';
+        points: Array<{ step: number; energy: number }>;
+      }
+    | {
+        kind: 'curve_overlay';
+        minutes: number[];
+        series: Array<{ key: string; label: string; values: Array<number | null> }>;
+      }
+    | {
+        kind: 'som_grid';
+        grid_height: number;
+        grid_width: number;
+        active_cell: number;
+        cells: Array<{
+          cell_index: number;
+          row: number;
+          col: number;
+          count: number;
+          dominant_label?: string | null;
+          dominant_label_display?: string;
+          purity?: number;
+        }>;
+      };
+  advanced: Record<string, unknown>;
 }
 
-export interface PrototypeRecord {
+export interface EvaluationRow {
+  key: string;
   label: string;
-  label_display: string;
-  support_size: number;
-  purity: number;
-  vector: number[];
-  mean_curve_minutes: number[];
-  mean_curve_values: number[];
-  representative_window_ids: string[];
-  representative_windows?: WindowRecord[];
-  typical_context: {
-    carbs: number;
-    bolus: number;
-    baseline_glucose: number;
-    trend_30m: number;
-    trend_90m: number;
-    meal_segment_mode: string;
-  };
-}
-
-export interface BaselineMetrics {
-  accuracy: number;
-  balanced_accuracy: number;
-  macro_f1: number;
-  weighted_f1: number;
-  confusion_matrix: {
-    labels: string[];
-    matrix: number[][];
-  };
-}
-
-export interface NoisePoint {
-  mode: string;
-  level: number;
-  top1_accuracy: number;
-  top3_hit_rate: number;
-}
-
-export interface QualitativeExample {
-  window_id: string;
-  patient_id: string;
-  label: string;
-  top_ids: string[];
-  top_labels: string[];
-  top_patients: string[];
-  top1_correct: boolean;
-  top3_hit: boolean;
-  top5_hit: boolean;
-  mrr: number;
-  label_purity_top5: number;
-  same_patient_rate: number;
-  cross_patient_top1: boolean;
-  energy_before: number;
-  energy_after: number;
-  energy_drop: number;
-  attention_entropy: number;
-  top_weight_gap: number;
-  predicted_label: string;
-  prototype_label: string;
-  prototype_distribution: Record<string, number>;
+  family: 'neural' | 'baseline';
+  available: boolean;
+  top1_accuracy: number | null;
+  top3_hit_rate: number | null;
+  mean_reciprocal_rank: number | null;
+  noise_stability: number | null;
+  secondary_metrics: Record<string, number | null>;
+  additional_metrics?: Record<string, number | null | undefined>;
+  noise_points?: Array<{
+    mode: string;
+    level: number;
+    top1_accuracy: number;
+    top3_hit_rate: number;
+  }>;
+  notes?: string;
 }
 
 export interface EvaluationData {
-  retrieval_metrics: Record<string, number>;
-  diagnostics: Record<string, number>;
-  baselines: Record<string, BaselineMetrics>;
-  per_patient: Array<{
-    patient_id: string;
-    top1_accuracy: number;
-    top3_hit_rate: number;
-    mrr: number;
-    same_patient_rate: number;
-    count: number;
-  }>;
-  noise_robustness: NoisePoint[];
-  qualitative_examples: {
-    successes: QualitativeExample[];
-    failures: QualitativeExample[];
+  title: string;
+  subtitle: string;
+  disclaimer: string;
+  selected_model: ModelKey;
+  comparison_rows: EvaluationRow[];
+  comparison_chart: {
+    kind: 'primary_metrics';
+    data: Array<{
+      label: string;
+      top1_accuracy: number | null;
+      top3_hit_rate: number | null;
+      mean_reciprocal_rank: number | null;
+      noise_stability: number | null;
+      family: 'neural' | 'baseline';
+    }>;
   };
-  limitations: string[];
+  stability_chart: {
+    kind: 'noise_robustness';
+    series: Array<{
+      key: string;
+      label: string;
+      family: 'neural' | 'baseline';
+      points: Array<{
+        mode: string;
+        level: number;
+        top1_accuracy: number;
+        top3_hit_rate: number;
+      }>;
+    }>;
+  };
+  prototype_block: Array<{
+    model: string;
+    label: string;
+    items: Array<{
+      title: string;
+      support: number;
+      purity: number;
+    }>;
+  }>;
+  additional_metrics: {
+    models: Array<Record<string, string | number | null | undefined>>;
+    baselines: Array<Record<string, string | number | null | undefined>>;
+    unavailable: Array<Record<string, unknown>>;
+  };
+  conclusion: string;
 }
 
 export interface AboutData {
   title: string;
-  plain_language: string;
-  why_memory_based: string[];
-  vector_construction: {
-    feature_blocks: string[];
-    feature_dimension: number;
-  };
-  hopfield_equations: Record<string, string>;
-  limitations: string[];
+  intro: string;
+  sections: Array<{
+    title: string;
+    body: string[];
+  }>;
+  formulas: Array<{
+    title: string;
+    formula: string;
+  }>;
+  available_models: ModelDescriptor[];
 }
-

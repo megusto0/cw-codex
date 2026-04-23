@@ -3,7 +3,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -11,150 +10,269 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import MetricCard from '../components/MetricCard';
-import { fetchJson } from '../api';
+import ModelSwitch from '../components/ModelSwitch';
+import { fetchModelJson } from '../api';
+import { useModelPreference } from '../model-context';
+import { CHART_COLORS, formatCompactNumber, formatFamily, formatMetricValue, formatPercent } from '../presentation';
 import type { EvaluationData } from '../types';
 
-function formatPercent(value: number) {
-  return `${(value * 100).toFixed(1)}%`;
+function noiseModeLabel(value: string | undefined) {
+  if (value === 'feature_mask') {
+    return 'Маскирование признаков';
+  }
+  return 'Гауссов шум';
 }
 
 export default function EvaluationPage() {
+  const { model } = useModelPreference();
   const [data, setData] = useState<EvaluationData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchJson<EvaluationData>('/api/evaluation')
+    setError(null);
+    fetchModelJson<EvaluationData>('/api/evaluation', model)
       .then(setData)
       .catch((reason: Error) => setError(reason.message));
-  }, []);
+  }, [model]);
 
-  const baselineRows = useMemo(() => {
-    if (!data) return [];
-    return Object.entries(data.baselines).map(([name, metrics]) => ({
-      name: name.replace(/_/g, ' '),
-      balancedAccuracy: Number((metrics.balanced_accuracy * 100).toFixed(1)),
-      macroF1: Number((metrics.macro_f1 * 100).toFixed(1)),
-    }));
+  const selectedRow = useMemo(
+    () => data?.comparison_rows.find((item) => item.key === data.selected_model) ?? null,
+    [data],
+  );
+
+  const selectedNoiseSeries = useMemo(() => {
+    if (!data) {
+      return null;
+    }
+    const series =
+      data.stability_chart.series.find((item) => item.key === data.selected_model) ??
+      data.stability_chart.series[0] ??
+      null;
+    if (!series || !series.points.length) {
+      return null;
+    }
+    const dominantMode = series.points[0]?.mode;
+    return {
+      label: series.label,
+      mode: dominantMode,
+      points: series.points
+        .filter((item) => item.mode === dominantMode)
+        .map((item) => ({
+          level: item.level,
+          top1_accuracy: item.top1_accuracy,
+          top3_hit_rate: item.top3_hit_rate,
+        })),
+    };
   }, [data]);
 
   if (error) {
-    return <section className="page"><div className="panel">Failed to load evaluation: {error}</div></section>;
+    return (
+      <section className="page">
+        <div className="panel empty-panel">Не удалось загрузить сравнительные результаты: {error}</div>
+      </section>
+    );
   }
 
   if (!data) {
-    return <section className="page"><div className="panel">Loading evaluation...</div></section>;
+    return (
+      <section className="page">
+        <div className="panel empty-panel">Загрузка сравнительного анализа…</div>
+      </section>
+    );
   }
 
   return (
     <section className="page">
-      <header className="page-header">
-        <div>
-          <span className="eyebrow">Evaluation</span>
-          <h2>Retrieval Quality, Baselines, and Failure Modes</h2>
-          <p>The emphasis is interpretability and robustness rather than chasing a better classifier number.</p>
+      <header className="page-header page-header-compact">
+        <div className="section-title">
+          <span className="eyebrow">Сравнение retrieval-подходов</span>
+          <h2>{data.title}</h2>
+          <p>{data.subtitle}</p>
+          <div className="callout info">{data.disclaimer}</div>
+        </div>
+        <div className="page-switch">
+          <ModelSwitch />
         </div>
       </header>
 
-      <section className="metric-grid">
-        <MetricCard label="Top-1 Retrieval" value={formatPercent(data.retrieval_metrics.top1_accuracy)} />
-        <MetricCard label="Top-3 Hit Rate" value={formatPercent(data.retrieval_metrics.top3_hit_rate)} />
-        <MetricCard label="MRR" value={data.retrieval_metrics.mean_reciprocal_rank.toFixed(3)} />
-        <MetricCard label="Energy Drop" value={data.diagnostics.average_energy_drop.toFixed(3)} />
-        <MetricCard label="Entropy" value={data.diagnostics.average_attention_entropy.toFixed(3)} />
-        <MetricCard label="Cross-Patient Top-1" value={formatPercent(data.diagnostics.cross_patient_top1_rate)} />
-      </section>
+      <article className="panel">
+        <div className="section-title">
+          <span className="eyebrow">Основные метрики</span>
+          <p>
+            Таблица показывает top-1 same-label retrieval, top-3 hit rate, MRR и noise stability. Именно
+            эти четыре величины используются как основной сравнительный набор.
+          </p>
+        </div>
+
+        <div className="results-table">
+          <div className="results-table-header">
+            <span>Модель</span>
+            <span>Семейство</span>
+            <span>Top-1</span>
+            <span>Top-3</span>
+            <span>MRR</span>
+            <span>Noise stability</span>
+          </div>
+          {data.comparison_rows.map((row) => (
+            <div
+              key={row.key}
+              className={`results-table-row${row.key === data.selected_model ? ' selected' : ''}`}
+            >
+              <span>{row.label}</span>
+              <span>{formatFamily(row.family)}</span>
+              <span>{formatPercent(row.top1_accuracy)}</span>
+              <span>{formatPercent(row.top3_hit_rate)}</span>
+              <span>{formatCompactNumber(row.mean_reciprocal_rank, 3)}</span>
+              <span>{formatPercent(row.noise_stability)}</span>
+            </div>
+          ))}
+        </div>
+
+        {selectedRow?.notes ? <div className="callout info">{selectedRow.notes}</div> : null}
+      </article>
 
       <section className="two-column">
         <article className="panel">
-          <span className="eyebrow">Baseline Comparison</span>
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <BarChart data={baselineRows}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(36, 56, 54, 0.09)" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} interval={0} angle={-14} textAnchor="end" height={64} />
+          <div className="section-title">
+            <span className="eyebrow">Сводный график</span>
+            <p>Визуальное сравнение top-1, top-3 и noise stability для всех доступных методов.</p>
+          </div>
+          <div className="chart-shell" style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.comparison_chart.data}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} angle={-12} textAnchor="end" height={70} />
                 <YAxis tickLine={false} axisLine={false} />
                 <Tooltip />
-                <Legend />
-                <Bar dataKey="balancedAccuracy" fill="#1f8a70" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="macroF1" fill="#d97706" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="top1_accuracy" name="Top-1" fill={CHART_COLORS.green} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="top3_hit_rate" name="Top-3" fill={CHART_COLORS.accent} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="noise_stability" name="Noise stability" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </article>
 
         <article className="panel">
-          <span className="eyebrow">Noise Robustness</span>
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <LineChart data={data.noise_robustness}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(36, 56, 54, 0.09)" />
-                <XAxis dataKey="level" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Legend />
-                <Line dataKey="top1_accuracy" name="Top-1" stroke="#1f8a70" strokeWidth={2.5} />
-                <Line dataKey="top3_hit_rate" name="Top-3" stroke="#d97706" strokeWidth={2.5} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="section-title">
+            <span className="eyebrow">Устойчивость выбранной модели</span>
+            <p>
+              Для выбранной модели показывается деградация retrieval при одном типе искажения. Это
+              локальная проверка устойчивости, а не клиническая оценка.
+            </p>
           </div>
+          {selectedNoiseSeries ? (
+            <>
+              <div className="chart-shell" style={{ height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={selectedNoiseSeries.points}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                    <XAxis dataKey="level" tickLine={false} axisLine={false} />
+                    <YAxis tickLine={false} axisLine={false} />
+                    <Tooltip />
+                    <Line dataKey="top1_accuracy" name="Top-1" stroke={CHART_COLORS.green} strokeWidth={2.2} dot={false} />
+                    <Line dataKey="top3_hit_rate" name="Top-3" stroke={CHART_COLORS.accent} strokeWidth={2.2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="chart-caption">
+                Показан режим: {noiseModeLabel(selectedNoiseSeries.mode)}. Модель: {selectedNoiseSeries.label}.
+              </p>
+            </>
+          ) : (
+            <div className="empty-panel">Для выбранной модели нет сохранённой кривой устойчивости.</div>
+          )}
         </article>
       </section>
-
-      <article className="panel">
-        <span className="eyebrow">Per-Patient Retrieval</span>
-        <div style={{ width: '100%', height: 280 }}>
-          <ResponsiveContainer>
-            <BarChart data={data.per_patient}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(36, 56, 54, 0.09)" />
-              <XAxis dataKey="patient_id" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="top1_accuracy" name="Top-1" fill="#1f8a70" radius={[8, 8, 0, 0]} />
-              <Bar dataKey="top3_hit_rate" name="Top-3" fill="#d97706" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </article>
 
       <section className="two-column">
         <article className="panel">
-          <span className="eyebrow">Selected Successes</span>
-          <div className="stack-list">
-            {data.qualitative_examples.successes.map((example) => (
-              <div key={example.window_id} className="step-card">
-                <strong>{example.window_id}</strong>
-                <span>{example.label.replace(/_/g, ' ')}</span>
-                <span>Top-1 correct, gap {example.top_weight_gap.toFixed(3)}</span>
+          <div className="section-title">
+            <span className="eyebrow">Прототипные структуры</span>
+            <p>
+              Блок показывает, как каждая нейросетевая семья агрегирует локальные области памяти или карты.
+            </p>
+          </div>
+          <div className="prototype-strip">
+            {data.prototype_block.map((block) => (
+              <div key={block.model} className="prototype-card">
+                <strong>{block.label}</strong>
+                <ul className="plain-list compact">
+                  {block.items.map((item) => (
+                    <li key={`${block.model}-${item.title}`}>
+                      <span>{item.title}</span>
+                      <span>
+                        support {item.support}, purity {formatCompactNumber(item.purity, 2)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
         </article>
 
         <article className="panel">
-          <span className="eyebrow">Selected Failures</span>
-          <div className="stack-list">
-            {data.qualitative_examples.failures.map((example) => (
-              <div key={example.window_id} className="step-card">
-                <strong>{example.window_id}</strong>
-                <span>True label: {example.label.replace(/_/g, ' ')}</span>
-                <span>Top retrieved label: {example.top_labels[0].replace(/_/g, ' ')}</span>
-              </div>
-            ))}
+          <div className="section-title">
+            <span className="eyebrow">Краткий вывод</span>
+            <p>{data.conclusion}</p>
           </div>
         </article>
       </section>
 
-      <article className="panel">
-        <span className="eyebrow">Limitations</span>
-        <ul className="plain-list">
-          {data.limitations.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </article>
+      <details className="panel disclosure-panel">
+        <summary>Дополнительные метрики</summary>
+        <div className="disclosure-content">
+          <div className="two-column">
+            <div>
+              <h3>Нейросетевые модели</h3>
+              <div className="results-table small">
+                <div className="results-table-header">
+                  <span>Модель</span>
+                  <span>Top-5</span>
+                  <span>same-patient</span>
+                  <span>cross-patient</span>
+                  <span>Macro-F1</span>
+                </div>
+                {data.additional_metrics.models.map((row) => (
+                  <div key={String(row.key)} className="results-table-row">
+                    <span>{String(row.label)}</span>
+                    <span>{formatMetricValue(row.top5_hit_rate as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.same_patient_top1 as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.cross_patient_top1 as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.macro_f1 as number | null | undefined, 3)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3>Базовые методы</h3>
+              <div className="results-table small">
+                <div className="results-table-header">
+                  <span>Метод</span>
+                  <span>Top-5</span>
+                  <span>Macro-F1</span>
+                  <span>Balanced acc.</span>
+                  <span>Label purity</span>
+                </div>
+                {data.additional_metrics.baselines.map((row) => (
+                  <div key={String(row.key)} className="results-table-row">
+                    <span>{String(row.label)}</span>
+                    <span>{formatMetricValue(row.top5_hit_rate as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.macro_f1 as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.balanced_accuracy as number | null | undefined, 3)}</span>
+                    <span>{formatMetricValue(row.label_purity_top5 as number | null | undefined, 3)}</span>
+                  </div>
+                ))}
+              </div>
+              {data.additional_metrics.unavailable.length ? (
+                <div className="callout warning">
+                  Недоступные baseline-методы: {data.additional_metrics.unavailable.map((item) => String(item.label)).join(', ')}.
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
-

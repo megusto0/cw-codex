@@ -3,6 +3,10 @@ backend/.pytest_cache/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/vite.config.js
+frontend/vite.config.d.ts
 __pycache__/
 *.pyc
 *.tsbuildinfo
+backend-*.log
+backend-*.err.log

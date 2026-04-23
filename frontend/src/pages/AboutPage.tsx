@@ -13,65 +13,60 @@ export default function AboutPage() {
   }, []);
 
   if (error) {
-    return <section className="page"><div className="panel">Failed to load methodology: {error}</div></section>;
+    return (
+      <section className="page">
+        <div className="panel empty-panel">Не удалось загрузить методологическое описание: {error}</div>
+      </section>
+    );
   }
 
   if (!data) {
-    return <section className="page"><div className="panel">Loading methodology...</div></section>;
+    return (
+      <section className="page">
+        <div className="panel empty-panel">Загрузка методологии…</div>
+      </section>
+    );
   }
 
   return (
     <section className="page">
-      <header className="page-header">
-        <div>
-          <span className="eyebrow">About / Methodology</span>
+      <header className="page-header page-header-compact">
+        <div className="section-title">
+          <span className="eyebrow">Методология</span>
           <h2>{data.title}</h2>
-          <p>{data.plain_language}</p>
+          <p>{data.intro}</p>
         </div>
       </header>
 
-      <section className="two-column">
-        <article className="panel">
-          <span className="eyebrow">Why Memory-Based</span>
-          <ul className="plain-list">
-            {data.why_memory_based.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="panel">
-          <span className="eyebrow">Feature Blocks</span>
-          <ul className="plain-list">
-            {data.vector_construction.feature_blocks.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <div className="callout">Feature dimension: {data.vector_construction.feature_dimension}</div>
-        </article>
-      </section>
+      <div className="two-column">
+        {data.sections.map((section) => (
+          <article key={section.title} className="panel">
+            <div className="section-title">
+              <span className="eyebrow">{section.title}</span>
+            </div>
+            <ul className="plain-list">
+              {section.body.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
 
       <article className="panel">
-        <span className="eyebrow">Hopfield Retrieval</span>
-        <div className="equation-grid">
-          {Object.entries(data.hopfield_equations).map(([label, equation]) => (
-            <div key={label} className="equation-card">
-              <strong>{label.replace(/_/g, ' ')}</strong>
-              <code>{equation}</code>
+        <div className="section-title">
+          <span className="eyebrow">Краткие формулы</span>
+          <p>Формулы приведены только для тех этапов, которые действительно нужны для защиты методики.</p>
+        </div>
+        <div className="formula-grid">
+          {data.formulas.map((item) => (
+            <div key={item.title} className="formula-card">
+              <strong>{item.title}</strong>
+              <code>{item.formula}</code>
             </div>
           ))}
         </div>
       </article>
-
-      <article className="panel">
-        <span className="eyebrow">Not a Clinical System</span>
-        <ul className="plain-list">
-          {data.limitations.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </article>
     </section>
   );
 }
-

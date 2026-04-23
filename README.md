@@ -1,128 +1,94 @@
-# RL Therapy Lab - Hopfield Postprandial Memory
+# Postprandial Retrieval Lab
 
-Standalone coursework/research demo built only on the top-level `OhioT1DM` XML folder.
+**Сравнение нейронных сетей в задаче поиска сходных постпрандиальных CGM-окон**
 
-This project is intentionally separate from Glucoscope in repository structure, backend logic, APIs, feature pipeline, memory model, and frontend code. It uses Glucoscope only as a visual reference for calm dashboard layout, card presentation, chart containers, and navigation rhythm.
+Репозиторий содержит самостоятельный coursework-проект по сравнительному neural retrieval на выборке `OhioT1DM`. Проект остаётся отдельным от Glucoscope: заимствованы только палитра и спокойная dashboard-эстетика, а backend-логика, обработка XML, аналитика и выводы реализованы независимо.
 
-## What It Does
+Центральный вопрос проекта формулируется так: как разные нейросетевые семейства ведут себя в задаче поиска сходных постпрандиальных CGM-окон на малой ретроспективной выборке и поддерживают ли эти данные вывод о явно лучшей модели вообще.
 
-The application stores retrospective meal windows as fixed-length feature vectors and uses a continuous Hopfield-style associative memory to retrieve similar historical postprandial cases.
+Система не является медицинским изделием, не формирует клинические рекомендации и не предназначена для выбора дозы инсулина.
 
-Core emphasis:
+## Что сравнивается
 
-- similar-case retrieval instead of a classifier zoo
-- prototype memories for major response types
-- feature-grounded explanations for why cases match
-- honest evaluation and limitations
+В интерфейсе доступны ровно три top-level режима:
 
-It is not a clinical system, not a treatment recommender, and not a dosing tool.
+1. `Память Хопфилда`
+   Ассоциативный retrieval-baseline с recall-траекторией и энергетической диагностикой.
+2. `Сиамская temporal-модель`
+   Temporal-энкодер `1D-CNN + MLP`, отображающий окно в эмбеддинговое пространство для retrieval по косинусному сходству.
+3. `Карта Кохонена`
+   Модель самоорганизации для анализа топологической структуры и neighborhood-based retrieval.
 
-## Data Scope
+Именно эти три режима оставлены как основные, потому что они представляют разные нейросетевые семейства. Близкие по смыслу ablation-варианты и простые baselines не вынесены в отдельные экранные режимы, чтобы проект не превращался в classifier zoo.
 
-Raw input is read only from:
+## Evaluation-only baselines
+
+На странице `Сравнение моделей` дополнительно показаны только как контекст:
+
+- cosine kNN
+- DTW kNN
+- Soft-DTW kNN
+- nearest prototype
+- `k-Shape` помечается как unavailable, если артефакт не рассчитан
+
+Они нужны для умеренной калибровки результатов, но не определяют архитектуру интерфейса.
+
+## Страницы интерфейса
+
+Приложение сведено к четырём маршрутам:
+
+1. `Обзор`
+   Данные, выбранная модель, 4 headline-метрики и компактная интерпретация.
+2. `Поиск случаев`
+   Единая рабочая страница с выбором окна и retrieval-результатом текущей модели.
+3. `Сравнение моделей`
+   Сводная таблица, первичные retrieval-метрики, baselines и короткий вывод.
+4. `Методология`
+   Задача, данные, признаки, модели, метрики и ограничения.
+
+## Текущий срез данных
+
+- Пациенты: `6`
+- Выделенные окна приёма пищи: `1303`
+- Пригодные окна для retrieval-анализа: `474`
+- Окна памяти / train: `329`
+- Размерность исходных признаков: `85`
+
+## Основные результаты
+
+| Модель | Top-1 | Top-3 | MRR | Noise stability | Представление |
+| --- | --- | --- | --- | --- | --- |
+| Память Хопфилда | `41.1%` | `61.6%` | `0.505` | `98.9%` | `85` признаков |
+| Сиамская temporal-модель | `53.4%` | `65.8%` | `0.608` | `94.1%` | `48`-мерный эмбеддинг |
+| Карта Кохонена | `53.4%` | `72.6%` | `0.632` | `99.7%` | карта `5x5` |
+
+Краткая интерпретация:
+
+- Память Хопфилда остаётся наиболее удобной для ассоциативной интерпретации и анализа recall.
+- Сиамская temporal-модель даёт сильное retrieval-качество в обученном метрическом пространстве.
+- Карта Кохонена лучше всего показывает локальную структуру и neighbourhood-связи.
+
+Эти различия не следует трактовать как клиническое превосходство одной модели.
+
+## Почему retrieval-подход здесь оправдан
+
+На малой выборке retrieval позволяет обсуждать конкретные соответствия между запросным окном и историческими случаями, а не только усреднённую точность. Это делает анализ более защитимым для coursework: можно показать сильные совпадения, неудачи, прототипы, локальные структуры и ограничения без завышенных заявлений о переносимости.
+
+## Структура проекта
 
 ```text
-../OhioT1DM
+backend/    FastAPI, пайплайн артефактов, Hopfield, Siamese temporal, SOM
+frontend/   React + Vite + TypeScript, компактный comparative UI
+artifacts/  сохранённые модели, метрики, comparative caches, отчёты
+docs/       coursework report и вспомогательные текстовые материалы
+scripts/    launch-скрипты для Windows
 ```
 
-Supported raw streams:
-
-- CGM
-- meals / carbs
-- bolus
-- basal / temp basal
-- patient id and timestamps
-- Basis heart-rate events when available
-
-## Built Results
-
-Current generated artifacts use the real local OhioT1DM data and produced:
-
-- `6` patients
-- `1303` extracted meal windows
-- `474` usable retrospective memory windows
-- `329` train memories
-- `85` feature dimensions in the full dataset build
-- Hopfield top-1 same-label retrieval: `41.1%`
-- Hopfield top-3 hit rate: `61.6%`
-- mean reciprocal rank: `0.505`
-
-These are retrospective research metrics, not clinical validation.
-
-## Project Layout
-
-```text
-rl-therapy-lab-hopfield-memory/
-  backend/
-    app/
-    tests/
-  frontend/
-    src/
-  artifacts/
-    datasets/
-    models/
-    reports/
-  docs/
-    coursework_report.md
-  README.md
-  start.cmd
-  start.sh
-```
-
-## Backend
-
-Backend stack:
-
-- Python
-- FastAPI
-- NumPy / Pandas
-- scikit-learn
-
-Key endpoints:
-
-- `GET /api/health`
-- `GET /api/dashboard`
-- `GET /api/windows`
-- `GET /api/windows/{window_id}`
-- `POST /api/memory/retrieve`
-- `POST /api/memory/custom-query`
-- `GET /api/prototypes`
-- `GET /api/prototypes/{label}`
-- `GET /api/evaluation`
-- `GET /api/evaluation/noise`
-- `GET /api/about`
-
-## Frontend
-
-Frontend stack:
-
-- React
-- Vite
-- TypeScript
-- Recharts
-
-Pages:
-
-- Overview
-- Case Explorer
-- Similar Cases
-- Prototype Memory
-- Evaluation
-- About / Methodology
-
-## Run Locally
+## Запуск
 
 ### Windows
 
 ```bat
-start.cmd
-```
-
-If port `8000` or `5174` is already busy:
-
-```bat
-set BACKEND_PORT=8012
-set FRONTEND_PORT=5182
 start.cmd
 ```
 
@@ -132,90 +98,36 @@ start.cmd
 ./start.sh
 ```
 
-If the default ports are busy:
+## Пересборка артефактов
 
-```bash
-BACKEND_PORT=8012 FRONTEND_PORT=5182 ./start.sh
-```
+Полная пересборка:
 
-Manual run:
-
-```bash
+```bat
 cd backend
-python -m pip install -r requirements.txt
-python -m app.build
-uvicorn app.main:app --reload
+..\.venv\Scripts\python.exe -m app.build
 ```
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Во время build пересчитываются:
 
-The Vite dev server proxies `/api` to `http://127.0.0.1:8000`.
-
-## Tests
-
-From `backend/`:
-
-```bash
-python -m pytest -q
-```
-
-Current tests cover:
-
-- feature vector shape stability
-- missing heart-rate handling
-- scaler fit on train only
-- exact top-k retrieval count
-- finite energy values
-- held-out split without self-retrieval leakage
-- API health endpoint
-
-## Artifacts
-
-Generated files include:
-
-- `artifacts/datasets/meal_windows.csv`
-- `artifacts/datasets/meal_windows.json`
-- `artifacts/datasets/feature_matrix.npy`
-- `artifacts/datasets/feature_metadata.json`
-- `artifacts/models/runtime_bundle.pkl`
-- `artifacts/models/hopfield_memory.npz`
-- `artifacts/reports/latest_metrics.json`
-- `artifacts/reports/latest_report.md`
-- `artifacts/reports/chart_data.json`
+- Hopfield runtime bundle
+- Siamese temporal artifacts
+- SOM artifacts
+- evaluation-only baseline cache
 - `docs/coursework_report.md`
+- `artifacts/reports/latest_report.md`
 
-## Visual Reuse vs Logic Reuse
+## Проверка
 
-Visual ideas reused from Glucoscope:
+Локально проверено:
 
-- left-side navigation rail
-- calm dashboard composition
-- card-based metric summaries
-- restrained chart/table styling
+- `python -m pytest -q`
+- `npm test`
+- `npm run build`
 
-Explicitly not reused from Glucoscope:
+## Ограничения
 
-- backend modules
-- XML parsing logic
-- meal-processing rules
-- analytics logic
-- RL logic
-- therapy or dose recommendation logic
+- выборка ограничена шестью пациентами `OhioT1DM`
+- исследовательские метки являются ретроспективными и детерминированными
+- часть окон не содержит полного heart-rate context
+- различия между моделями наблюдаются на одной малой выборке и не доказывают универсального победителя
 
-## Known Limitations
-
-- Only six OhioT1DM participants are available.
-- The response labels are deterministic retrospective categories.
-- The memory vectors are pre-meal and context focused, so they should not be framed as clinical prediction.
-- Heart-rate coverage is incomplete for some windows.
-- Retrieval is often informative even when classification-style metrics remain modest.
-
-## Next Steps
-
-- Add a small classical binary Hopfield educational page as a secondary demo.
-- Add richer prototype-local explanations and medoid comparison views.
-- Add more robust query editing around the custom-query endpoint.
