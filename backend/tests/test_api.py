@@ -39,6 +39,8 @@ def test_dashboard_defaults_to_hopfield():
     payload = response.json()
     assert payload["selected_model"]["key"] == "hopfield"
     assert payload["headline_metrics"]["representation_size"] > 0
+    assert payload["headline_metrics"]["representation_label"] == "Размер признакового представления"
+    assert "noise_stability" not in payload["headline_metrics"]
 
 
 def test_dashboard_supports_siamese_temporal_and_som():
@@ -105,3 +107,6 @@ def test_evaluation_endpoint_returns_comparison_rows_for_models_and_baselines():
     row_keys = {row["key"] for row in payload["comparison_rows"]}
     assert {"hopfield", "siamese_temporal", "som"} <= row_keys
     assert payload["comparison_chart"]["kind"] == "primary_metrics"
+    assert payload["robustness_summary"]["rows"]
+    assert payload["seed_stability"]["models"]
+    assert payload["failure_analysis"]["som"]

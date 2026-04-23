@@ -62,12 +62,7 @@ export default function DashboardPage() {
         <MetricCard label="MRR" value={formatCompactNumber(data.headline_metrics.mean_reciprocal_rank, 3)} />
         <MetricCard
           label={data.headline_metrics.representation_label}
-          value={String(data.headline_metrics.representation_size)}
-          hint={
-            data.headline_metrics.noise_stability !== null && data.headline_metrics.noise_stability !== undefined
-              ? `noise stability ${formatPercent(data.headline_metrics.noise_stability)}`
-              : undefined
-          }
+          value={data.headline_metrics.representation_value ?? String(data.headline_metrics.representation_size)}
         />
       </section>
 

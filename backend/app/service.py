@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from typing import Any
 
 import numpy as np
@@ -14,6 +15,7 @@ from .baselines import (
 )
 from .config import Settings, get_settings
 from .engines import RetrievalEngine, available_model_descriptors, create_engine_registry, normalize_model_key
+from .evaluation_quality import primary_corruption_retention, refresh_evaluation_artifacts, summarize_corruption_points
 from .pipeline import build_runtime_bundle
 
 
@@ -29,6 +31,18 @@ def _representation_size(engine: RetrievalEngine, dashboard_payload: dict[str, A
     model_summary = dashboard_payload.get("model_summary", {})
     value = model_summary.get("representation_dimension")
     return int(value) if value is not None else int(dashboard_payload.get("feature_dimension", 0))
+
+
+def _representation_display(engine: RetrievalEngine, dashboard_payload: dict[str, Any], representation_size: int) -> dict[str, Any]:
+    key = engine.descriptor["key"]
+    if key == "siamese_temporal":
+        return {"label": "Размерность эмбеддинга", "value": str(representation_size)}
+    if key == "som":
+        return {
+            "label": "Размер карты",
+            "value": f"{engine.settings.som_grid_height}×{engine.settings.som_grid_width}",
+        }
+    return {"label": "Размер признакового представления", "value": str(representation_size)}
 
 
 def _summary_line(model_key: str, raw: dict[str, Any]) -> str:
@@ -75,12 +89,14 @@ class AppService:
     bundle: dict[str, Any] | None = None
     engines: dict[str, RetrievalEngine] | None = None
     baseline_rows: list[dict[str, Any]] | None = None
+    evaluation_summary: dict[str, Any] | None = None
 
     def ensure_bundle(self, force_refresh: bool = False) -> dict[str, Any]:
         if self.bundle is None or force_refresh:
             self.bundle = build_runtime_bundle(force=force_refresh, settings=self.settings)
             self.engines = None
             self.baseline_rows = None
+            self.evaluation_summary = None
         return self.bundle
 
     def ensure_engines(self) -> dict[str, RetrievalEngine]:
@@ -97,6 +113,18 @@ class AppService:
                 self.baseline_rows = evaluate_retrieval_baselines(self.ensure_bundle(), self.settings)
                 save_baselines_cache(self.settings, self.baseline_rows)
         return self.baseline_rows
+
+    def ensure_evaluation_summary(self) -> dict[str, Any]:
+        if self.evaluation_summary is None:
+            if self.settings.latest_eval_summary_path.exists():
+                self.evaluation_summary = json.loads(self.settings.latest_eval_summary_path.read_text(encoding="utf-8"))
+            else:
+                self.evaluation_summary = refresh_evaluation_artifacts(
+                    self.ensure_bundle(),
+                    settings=self.settings,
+                    baseline_rows=self.ensure_baselines(),
+                )
+        return self.evaluation_summary
 
     def get_engine(self, model: str | None = None) -> RetrievalEngine:
         normalized = normalize_model_key(model)
@@ -132,7 +160,7 @@ class AppService:
         retrieval = engine.evaluation()["retrieval_metrics"]
         comparison = self._model_comparison_panel()
         representation_size = _representation_size(engine, engine_dashboard)
-        noise_stability = next((item["noise_stability"] for item in comparison if item["key"] == engine.descriptor["key"]), None)
+        representation = _representation_display(engine, engine_dashboard, representation_size)
 
         return {
             "title": self.settings.project_name,
@@ -147,8 +175,8 @@ class AppService:
                 "top3_hit_rate": float(retrieval.get("top3_hit_rate", 0.0)),
                 "mean_reciprocal_rank": float(retrieval.get("mean_reciprocal_rank", 0.0)),
                 "representation_size": representation_size,
-                "representation_label": engine.descriptor.get("representation_name", "Представление"),
-                "noise_stability": noise_stability,
+                "representation_label": representation["label"],
+                "representation_value": representation["value"],
             },
             "dataset_strip": {
                 "patients": int(engine_dashboard["patients_count"]),
@@ -229,7 +257,15 @@ class AppService:
 
     def evaluation(self, selected_model: str | None = None) -> dict[str, Any]:
         model_rows = self._model_comparison_panel()
-        baseline_rows = self.ensure_baselines()
+        baseline_rows = [
+            {
+                **row,
+                "robustness_summary": summarize_corruption_points(row.get("noise_points", [])),
+                "corruption_retention_top1_10": primary_corruption_retention(row.get("noise_points", [])),
+            }
+            for row in self.ensure_baselines()
+        ]
+        latest_summary = self.ensure_evaluation_summary()
         available_baselines = [item for item in baseline_rows if item.get("available")]
         unavailable_baselines = [item for item in baseline_rows if not item.get("available")]
 
@@ -243,11 +279,18 @@ class AppService:
                 "top3_hit_rate": item["top3_hit_rate"],
                 "mean_reciprocal_rank": item["mean_reciprocal_rank"],
                 "noise_stability": item["noise_stability"],
+                "corruption_retention_top1_10": item["corruption_retention_top1_10"],
                 "secondary_metrics": item["secondary_metrics"],
                 "notes": item["scientific_description"],
             }
             for item in model_rows
-        ] + available_baselines
+        ] + [
+            {
+                **item,
+                "secondary_metrics": item.get("secondary_metrics", {}),
+            }
+            for item in available_baselines
+        ]
 
         chart_rows = [
             {
@@ -256,6 +299,7 @@ class AppService:
                 "top3_hit_rate": row["top3_hit_rate"],
                 "mean_reciprocal_rank": row["mean_reciprocal_rank"],
                 "noise_stability": row["noise_stability"],
+                "corruption_retention_top1_10": row.get("corruption_retention_top1_10"),
                 "family": row["family"],
             }
             for row in comparison_rows
@@ -320,6 +364,10 @@ class AppService:
                 "data": chart_rows,
             },
             "stability_chart": stability_chart,
+            "robustness_summary": latest_summary.get("robustness", {}),
+            "seed_stability": latest_summary.get("seed_stability"),
+            "failure_analysis": latest_summary.get("failure_analysis", {}),
+            "patient_generalization": latest_summary.get("patient_generalization", []),
             "prototype_block": prototype_block,
             "additional_metrics": additional_metrics,
             "conclusion": (
@@ -346,7 +394,7 @@ class AppService:
                 {
                     "title": "Данные OhioT1DM",
                     "body": [
-                        "Используются ретроспективные записи CGM и контекст приема пищи из шести пациентов OhioT1DM.",
+                        "Используются ретроспективные записи CGM и контекст приема пищи из текущего 12-пациентного среза OhioT1DM.",
                         "Формируются постпрандиальные окна с единым train/test протоколом и исключением self-retrieval leakage.",
                     ],
                 },
@@ -375,7 +423,8 @@ class AppService:
                 {
                     "title": "Метрики",
                     "body": [
-                        "Основные метрики: top-1 same-label retrieval, top-3 hit rate, MRR и noise stability.",
+                        "Основные retrieval-метрики: top-1 same-label retrieval, top-3 hit rate и MRR.",
+                        "Устойчивость оценивается отдельно как сохранение Top-k при контролируемом маскировании признаков и численном возмущении входа.",
                         "Дополнительные метрики зависят от модели: energy drop для Хопфилда, neighborhood purity для Siamese, quantization/topographic error для SOM.",
                     ],
                 },
@@ -523,6 +572,7 @@ class AppService:
                     "top3_hit_rate": float(metrics.get("top3_hit_rate", 0.0)),
                     "mean_reciprocal_rank": float(metrics.get("mean_reciprocal_rank", 0.0)),
                     "noise_stability": compute_noise_stability(engine.noise()),
+                    "corruption_retention_top1_10": primary_corruption_retention(engine.noise()),
                     "secondary_metrics": self._secondary_metrics_for_model(key, diagnostics, metrics),
                     "additional_metrics": {
                         "top5_hit_rate": metrics.get("top5_hit_rate"),

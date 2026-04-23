@@ -53,6 +53,7 @@ export interface OverviewData {
     mean_reciprocal_rank: number;
     representation_size: number;
     representation_label: string;
+    representation_value?: string;
     noise_stability?: number | null;
   };
   dataset_strip: {
@@ -139,6 +140,7 @@ export interface EvaluationRow {
   top3_hit_rate: number | null;
   mean_reciprocal_rank: number | null;
   noise_stability: number | null;
+  corruption_retention_top1_10?: number | null;
   secondary_metrics: Record<string, number | null>;
   additional_metrics?: Record<string, number | null | undefined>;
   noise_points?: Array<{
@@ -164,6 +166,7 @@ export interface EvaluationData {
       top3_hit_rate: number | null;
       mean_reciprocal_rank: number | null;
       noise_stability: number | null;
+      corruption_retention_top1_10?: number | null;
       family: 'neural' | 'baseline';
     }>;
   };
@@ -195,6 +198,41 @@ export interface EvaluationData {
     baselines: Array<Record<string, string | number | null | undefined>>;
     unavailable: Array<Record<string, unknown>>;
   };
+  robustness_summary?: {
+    definition: string;
+    rows: Array<{
+      model_key: string;
+      model_label: string;
+      mode: string;
+      mode_display: string;
+      level: number;
+      label: string;
+      top1_clean: number;
+      top3_clean: number;
+      top1_corrupted: number;
+      top3_corrupted: number;
+      top1_drop: number;
+      top3_drop: number;
+      top1_retention?: number | null;
+      top3_retention?: number | null;
+    }>;
+  };
+  seed_stability?: {
+    note: string;
+    models: Array<{
+      key: string;
+      label: string;
+      status: string;
+      reason?: string | null;
+      summary: {
+        top1_accuracy: { mean: number | null; std: number | null };
+        top3_hit_rate: { mean: number | null; std: number | null };
+        mean_reciprocal_rank: { mean: number | null; std: number | null };
+      };
+    }>;
+  } | null;
+  failure_analysis?: Record<string, unknown>;
+  patient_generalization?: Array<Record<string, string | number | null | undefined>>;
   conclusion: string;
 }
 

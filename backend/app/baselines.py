@@ -63,6 +63,50 @@ def _soft_dtw_distance(left: np.ndarray, right: np.ndarray, gamma: float = 0.2) 
     return float(dp[n, m])
 
 
+def _dtw_distances_to_train(query: np.ndarray, train_sequences: np.ndarray) -> np.ndarray:
+    query = np.asarray(query, dtype=float)
+    train = np.asarray(train_sequences, dtype=float)
+    train_count, sequence_length = train.shape
+    previous = np.full((train_count, sequence_length + 1), np.inf, dtype=float)
+    previous[:, 0] = 0.0
+
+    for value in query:
+        current = np.full((train_count, sequence_length + 1), np.inf, dtype=float)
+        for column in range(1, sequence_length + 1):
+            cost = np.abs(value - train[:, column - 1])
+            current[:, column] = cost + np.minimum.reduce(
+                [previous[:, column], current[:, column - 1], previous[:, column - 1]]
+            )
+        previous = current
+    return previous[:, sequence_length]
+
+
+def _soft_dtw_distances_to_train(query: np.ndarray, train_sequences: np.ndarray, gamma: float = 0.2) -> np.ndarray:
+    query = np.asarray(query, dtype=float)
+    train = np.asarray(train_sequences, dtype=float)
+    train_count, sequence_length = train.shape
+    previous = np.full((train_count, sequence_length + 1), np.inf, dtype=float)
+    previous[:, 0] = 0.0
+
+    for value in query:
+        current = np.full((train_count, sequence_length + 1), np.inf, dtype=float)
+        for column in range(1, sequence_length + 1):
+            cost = (value - train[:, column - 1]) ** 2
+            scaled = np.vstack(
+                [
+                    previous[:, column] / gamma,
+                    current[:, column - 1] / gamma,
+                    previous[:, column - 1] / gamma,
+                ]
+            )
+            minimum = np.min(scaled, axis=0)
+            with np.errstate(over="ignore", invalid="ignore"):
+                softmin = -gamma * (np.log(np.exp(-(scaled - minimum)).sum(axis=0)) + minimum)
+            current[:, column] = cost + softmin
+        previous = current
+    return previous[:, sequence_length]
+
+
 def _sequence_noise(points: np.ndarray, mode: str, level: float, rng: np.random.Generator) -> np.ndarray:
     noisy = points.copy()
     if mode == "gaussian_noise" and level > 0:
@@ -179,7 +223,7 @@ def _evaluate_cosine_knn(inputs: BaselineInputs, settings: Settings) -> dict[str
 
 
 def _evaluate_dtw_family(inputs: BaselineInputs, settings: Settings, *, soft: bool) -> dict[str, Any]:
-    distance_fn = _soft_dtw_distance if soft else _dtw_distance
+    distance_fn = _soft_dtw_distances_to_train if soft else _dtw_distances_to_train
     key = "soft_dtw_knn" if soft else "dtw_knn"
     label = "Soft-DTW kNN" if soft else "DTW kNN"
     predictions: list[str] = []
@@ -187,7 +231,7 @@ def _evaluate_dtw_family(inputs: BaselineInputs, settings: Settings, *, soft: bo
     records: list[dict[str, Any]] = []
 
     for query_window, query_sequence in zip(inputs.test_windows, inputs.test_sequences):
-        distances = np.asarray([distance_fn(query_sequence, sequence) for sequence in inputs.train_sequences], dtype=float)
+        distances = distance_fn(query_sequence, inputs.train_sequences)
         top_indices = np.argsort(distances)[: settings.retrieval_top_k]
         top_labels = [inputs.train_windows[int(index)]["label"] for index in top_indices]
         metrics = _topk_metrics(query_window["label"], top_labels)
@@ -205,7 +249,7 @@ def _evaluate_dtw_family(inputs: BaselineInputs, settings: Settings, *, soft: bo
             top3_hits = []
             for query_window, query_sequence in zip(inputs.test_windows, inputs.test_sequences):
                 noisy_sequence = _sequence_noise(query_sequence, mode, float(level), rng)
-                distances = np.asarray([distance_fn(noisy_sequence, sequence) for sequence in inputs.train_sequences], dtype=float)
+                distances = distance_fn(noisy_sequence, inputs.train_sequences)
                 top_indices = np.argsort(distances)[: settings.retrieval_top_k]
                 top_labels = [inputs.train_windows[int(index)]["label"] for index in top_indices]
                 top1_hits.append(bool(top_labels and top_labels[0] == query_window["label"]))

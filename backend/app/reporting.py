@@ -56,6 +56,22 @@ def _compute_noise_stability(points: list[dict[str, Any]]) -> float | None:
     return sum(retentions) / len(retentions)
 
 
+def _corruption_retention_top1(points: list[dict[str, Any]]) -> float | None:
+    if not points:
+        return None
+    feature_mask = [point for point in points if point.get("mode") == "feature_mask"]
+    if not feature_mask:
+        return None
+    clean = next((point for point in feature_mask if float(point["level"]) == 0.0), None)
+    corrupted = next((point for point in feature_mask if abs(float(point["level"]) - 0.1) < 1e-6), None)
+    if not clean or not corrupted:
+        return None
+    clean_top1 = float(clean["top1_accuracy"])
+    if clean_top1 <= 0:
+        return None
+    return float(corrupted["top1_accuracy"]) / clean_top1
+
+
 def _best_supported_prototype(prototypes: dict[str, dict[str, Any]] | None) -> dict[str, Any] | None:
     if not prototypes:
         return None
@@ -85,7 +101,7 @@ def _example_line(title: str, example: dict[str, Any] | None) -> str:
 def _comparison_row_text(row: dict[str, Any]) -> str:
     return (
         f"| {row['label']} | {_share(row.get('top1_accuracy'))} | {_share(row.get('top3_hit_rate'))} | "
-        f"{_score(row.get('mean_reciprocal_rank'))} | {_share(row.get('noise_stability'))} |"
+        f"{_score(row.get('mean_reciprocal_rank'))} | {_share(row.get('corruption_retention_top1_10'))} |"
     )
 
 
@@ -97,16 +113,20 @@ def generate_coursework_report(
     hopfield_eval = bundle["evaluation"]
     hopfield_metrics = hopfield_eval["retrieval_metrics"]
     hopfield_noise = _compute_noise_stability(hopfield_eval.get("noise_robustness", []))
+    hopfield_retention = _corruption_retention_top1(hopfield_eval.get("noise_robustness", []))
 
     siamese_metrics = _load_json(settings.siamese_metrics_path) or {}
     siamese_retrieval = (siamese_metrics.get("retrieval_metrics") or {})
     siamese_noise = _compute_noise_stability(siamese_metrics.get("noise_robustness", []))
+    siamese_retention = _corruption_retention_top1(siamese_metrics.get("noise_robustness", []))
 
     som_metrics = _load_json(settings.som_metrics_path) or {}
     som_retrieval = (som_metrics.get("retrieval_metrics") or {})
     som_noise = _compute_noise_stability(som_metrics.get("noise_robustness", []))
+    som_retention = _corruption_retention_top1(som_metrics.get("noise_robustness", []))
 
     baseline_rows = _load_json(settings.comparison_metrics_path) or []
+    seed_stability = _load_json(settings.seed_stability_path) or {}
     siamese_prototypes = _load_json(settings.siamese_prototypes_path) or {}
     som_bundle = _load_pickle(settings.som_runtime_bundle_path) or {}
 
@@ -117,6 +137,7 @@ def generate_coursework_report(
             "top3_hit_rate": hopfield_metrics.get("top3_hit_rate"),
             "mean_reciprocal_rank": hopfield_metrics.get("mean_reciprocal_rank"),
             "noise_stability": hopfield_noise,
+            "corruption_retention_top1_10": hopfield_retention,
         },
         {
             "label": "Сиамская temporal-модель",
@@ -124,6 +145,7 @@ def generate_coursework_report(
             "top3_hit_rate": siamese_retrieval.get("top3_hit_rate"),
             "mean_reciprocal_rank": siamese_retrieval.get("mean_reciprocal_rank"),
             "noise_stability": siamese_noise,
+            "corruption_retention_top1_10": siamese_retention,
         },
         {
             "label": "Карта Кохонена",
@@ -131,6 +153,7 @@ def generate_coursework_report(
             "top3_hit_rate": som_retrieval.get("top3_hit_rate"),
             "mean_reciprocal_rank": som_retrieval.get("mean_reciprocal_rank"),
             "noise_stability": som_noise,
+            "corruption_retention_top1_10": som_retention,
         },
     ]
 
@@ -144,6 +167,18 @@ def generate_coursework_report(
                 f"- {row['label']}: top-1 {_share(row.get('top1_accuracy'))}, top-3 {_share(row.get('top3_hit_rate'))}, "
                 f"MRR {_score(row.get('mean_reciprocal_rank'))}."
             )
+
+    seed_lines: list[str] = []
+    for row in seed_stability.get("models", []):
+        if row.get("status") != "ok":
+            seed_lines.append(f"- {row.get('label', row.get('key'))}: недоступно ({row.get('reason', 'причина не указана')}).")
+            continue
+        summary = row["summary"]
+        seed_lines.append(
+            f"- {row['label']}: Top-1 {_score(summary['top1_accuracy']['mean'])}±{_score(summary['top1_accuracy']['std'])}, "
+            f"Top-3 {_score(summary['top3_hit_rate']['mean'])}±{_score(summary['top3_hit_rate']['std'])}, "
+            f"MRR {_score(summary['mean_reciprocal_rank']['mean'])}±{_score(summary['mean_reciprocal_rank']['std'])}."
+        )
 
     hopfield_proto = _best_supported_prototype(bundle["prototypes"])
     siamese_proto = _best_supported_prototype(siamese_prototypes if isinstance(siamese_prototypes, dict) else None)
@@ -223,20 +258,33 @@ def generate_coursework_report(
         "",
         "## 6. Метрики и protocol fairness",
         (
-            "Основными метриками являются top-1 same-label retrieval, top-3 hit rate, MRR и noise stability. "
-            "Классификационные показатели, same-patient / cross-patient доли и другие диагностические "
-            "величины остаются вторичными и используются только как вспомогательный контекст."
+            "Основными retrieval-метриками являются top-1 same-label retrieval, top-3 hit rate и MRR. "
+            "Устойчивость оценивается отдельно через контролируемое маскирование признаков и численное "
+            "возмущение входа; классификационные показатели остаются вторичными."
         ),
         (
             "На странице сравнения дополнительно показаны evaluation-only baselines: cosine kNN, DTW kNN, "
             "Soft-DTW kNN и nearest prototype. Они не формируют основную историю интерфейса и нужны только "
-            "для умеренной калибровки результатов."
+            "для умеренной калибровки результатов. Cache baseline-методов пересчитан для текущего 12-пациентного среза."
+        ),
+        (
+            "Коррупционная устойчивость задаётся явно: модель оценивается на тех же query-окнах после "
+            "10% и 20% маскирования признаков, а также малых и средних численных возмущений. В отчёте "
+            "основным коротким индикатором служит сохранение Top-1 при 10% маскировании."
         ),
         "",
         "## 7. Экспериментальные результаты",
-        "| Модель | Top-1 | Top-3 | MRR | Noise stability |",
+        "| Модель | Top-1 | Top-3 | MRR | Сохранение Top-1 при 10% маскировании |",
         "| --- | --- | --- | --- | --- |",
         *[_comparison_row_text(row) for row in neural_rows],
+        "",
+        "### Коррупционная устойчивость",
+        f"- Память Хопфилда: сохранение Top-1 при 10% маскировании {_share(hopfield_retention)}.",
+        f"- Сиамская temporal-модель: сохранение Top-1 при 10% маскировании {_share(siamese_retention)}.",
+        f"- Карта Кохонена: сохранение Top-1 при 10% маскировании {_share(som_retention)}.",
+        "",
+        "### Устойчивость trainable режимов по seed’ам",
+        *(seed_lines or ["- Seed-stability артефакт пока не рассчитан."]),
         "",
         "### Evaluation-only baselines",
         *baseline_lines,

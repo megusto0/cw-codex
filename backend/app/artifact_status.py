@@ -35,6 +35,10 @@ def artifacts_match_current_data_source(settings: Settings) -> dict[str, Any]:
         settings.siamese_runtime_bundle_path,
         settings.som_runtime_bundle_path,
         settings.comparison_metrics_path,
+        settings.latest_eval_summary_path,
+        settings.latest_baselines_path,
+        settings.seed_stability_path,
+        settings.som_audit_path,
     ]
     missing_paths = [str(path) for path in required_paths if not path.exists()]
     matches = not missing_paths and bundle_data_dir == expected_data_dir

@@ -23,6 +23,29 @@ function noiseModeLabel(value: string | undefined) {
   return 'Гауссов шум';
 }
 
+function formatMeanStd(mean?: number | null, std?: number | null) {
+  if (mean === null || mean === undefined || std === null || std === undefined) {
+    return '—';
+  }
+  return `${formatCompactNumber(mean, 3)} ± ${formatCompactNumber(std, 3)}`;
+}
+
+interface CompactFailureExample {
+  query_id?: string;
+  true_label_display?: string;
+  retrieved_label_display?: string;
+  top1_patient_relation?: string;
+  short_explanation?: string;
+  why_difficult?: string;
+}
+
+interface FailureBlock {
+  top1_failures?: CompactFailureExample[];
+  ambiguous_cases?: CompactFailureExample[];
+  same_patient_dominant?: CompactFailureExample[];
+  cross_patient_meaningful?: CompactFailureExample[];
+}
+
 export default function EvaluationPage() {
   const { model } = useModelPreference();
   const [data, setData] = useState<EvaluationData | null>(null);
@@ -65,6 +88,26 @@ export default function EvaluationPage() {
     };
   }, [data]);
 
+  const neuralRows = useMemo(() => data?.comparison_rows.filter((row) => row.family === 'neural') ?? [], [data]);
+  const baselineRows = useMemo(() => data?.comparison_rows.filter((row) => row.family === 'baseline') ?? [], [data]);
+  const selectedRobustnessRows = useMemo(
+    () => data?.robustness_summary?.rows.filter((row) => row.model_key === data.selected_model) ?? [],
+    [data],
+  );
+  const primaryRobustnessRows = useMemo(
+    () =>
+      data?.robustness_summary?.rows.filter(
+        (row) => row.mode === 'feature_mask' && Math.abs(row.level - 0.1) < 1e-6 && ['hopfield', 'siamese_temporal', 'som'].includes(row.model_key),
+      ) ?? [],
+    [data],
+  );
+  const selectedFailureBlock = useMemo(() => {
+    if (!data?.failure_analysis) {
+      return null;
+    }
+    return (data.failure_analysis as Record<string, FailureBlock>)[data.selected_model] ?? null;
+  }, [data]);
+
   if (error) {
     return (
       <section className="page">
@@ -99,8 +142,8 @@ export default function EvaluationPage() {
         <div className="section-title">
           <span className="eyebrow">Основные метрики</span>
           <p>
-            Таблица показывает top-1 same-label retrieval, top-3 hit rate, MRR и noise stability. Именно
-            эти четыре величины используются как основной сравнительный набор.
+            Основной блок показывает только retrieval-метрики: Top-1, Top-3 и MRR. Устойчивость,
+            baseline-методы и неудачные случаи вынесены ниже, чтобы не смешивать разные типы диагностики.
           </p>
         </div>
 
@@ -111,9 +154,8 @@ export default function EvaluationPage() {
             <span>Top-1</span>
             <span>Top-3</span>
             <span>MRR</span>
-            <span>Noise stability</span>
           </div>
-          {data.comparison_rows.map((row) => (
+          {neuralRows.map((row) => (
             <div
               key={row.key}
               className={`results-table-row${row.key === data.selected_model ? ' selected' : ''}`}
@@ -123,7 +165,6 @@ export default function EvaluationPage() {
               <span>{formatPercent(row.top1_accuracy)}</span>
               <span>{formatPercent(row.top3_hit_rate)}</span>
               <span>{formatCompactNumber(row.mean_reciprocal_rank, 3)}</span>
-              <span>{formatPercent(row.noise_stability)}</span>
             </div>
           ))}
         </div>
@@ -135,18 +176,18 @@ export default function EvaluationPage() {
         <article className="panel">
           <div className="section-title">
             <span className="eyebrow">Сводный график</span>
-            <p>Визуальное сравнение top-1, top-3 и noise stability для всех доступных методов.</p>
+            <p>Визуальное сравнение Top-1, Top-3 и MRR для трёх top-level neural retrieval моделей.</p>
           </div>
           <div className="chart-shell" style={{ height: 320 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.comparison_chart.data}>
+              <BarChart data={data.comparison_chart.data.filter((row) => row.family === 'neural')}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} angle={-12} textAnchor="end" height={70} />
                 <YAxis tickLine={false} axisLine={false} />
                 <Tooltip />
                 <Bar dataKey="top1_accuracy" name="Top-1" fill={CHART_COLORS.green} radius={[6, 6, 0, 0]} />
                 <Bar dataKey="top3_hit_rate" name="Top-3" fill={CHART_COLORS.accent} radius={[6, 6, 0, 0]} />
-                <Bar dataKey="noise_stability" name="Noise stability" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="mean_reciprocal_rank" name="MRR" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -154,10 +195,10 @@ export default function EvaluationPage() {
 
         <article className="panel">
           <div className="section-title">
-            <span className="eyebrow">Устойчивость выбранной модели</span>
+            <span className="eyebrow">Устойчивость</span>
             <p>
-              Для выбранной модели показывается деградация retrieval при одном типе искажения. Это
-              локальная проверка устойчивости, а не клиническая оценка.
+              Коррупционный тест показывает, насколько Top-k retrieval сохраняется после маскирования
+              признаков или численного возмущения входа.
             </p>
           </div>
           {selectedNoiseSeries ? (
@@ -177,6 +218,26 @@ export default function EvaluationPage() {
               <p className="chart-caption">
                 Показан режим: {noiseModeLabel(selectedNoiseSeries.mode)}. Модель: {selectedNoiseSeries.label}.
               </p>
+              {selectedRobustnessRows.length ? (
+                <div className="results-table small">
+                  <div className="results-table-header">
+                    <span>Искажение</span>
+                    <span>Top-1 после</span>
+                    <span>Снижение Top-1</span>
+                    <span>Top-3 после</span>
+                    <span>Снижение Top-3</span>
+                  </div>
+                  {selectedRobustnessRows.map((row) => (
+                    <div key={`${row.mode}-${row.level}`} className="results-table-row">
+                      <span>{row.label}</span>
+                      <span>{formatPercent(row.top1_corrupted)}</span>
+                      <span>{formatPercent(row.top1_drop)}</span>
+                      <span>{formatPercent(row.top3_corrupted)}</span>
+                      <span>{formatPercent(row.top3_drop)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="empty-panel">Для выбранной модели нет сохранённой кривой устойчивости.</div>
@@ -187,25 +248,75 @@ export default function EvaluationPage() {
       <section className="two-column">
         <article className="panel">
           <div className="section-title">
-            <span className="eyebrow">Прототипные структуры</span>
-            <p>
-              Блок показывает, как каждая нейросетевая семья агрегирует локальные области памяти или карты.
-            </p>
+            <span className="eyebrow">Базовые методы</span>
+            <p>Baselines пересчитаны на том же 12-пациентном query pool и остаются evaluation-only.</p>
           </div>
-          <div className="prototype-strip">
-            {data.prototype_block.map((block) => (
-              <div key={block.model} className="prototype-card">
-                <strong>{block.label}</strong>
-                <ul className="plain-list compact">
-                  {block.items.map((item) => (
-                    <li key={`${block.model}-${item.title}`}>
-                      <span>{item.title}</span>
-                      <span>
-                        support {item.support}, purity {formatCompactNumber(item.purity, 2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+          <div className="results-table small">
+            <div className="results-table-header">
+              <span>Метод</span>
+              <span>Top-1</span>
+              <span>Top-3</span>
+              <span>MRR</span>
+            </div>
+            {baselineRows.map((row) => (
+              <div key={row.key} className="results-table-row">
+                <span>{row.label}</span>
+                <span>{formatPercent(row.top1_accuracy)}</span>
+                <span>{formatPercent(row.top3_hit_rate)}</span>
+                <span>{formatCompactNumber(row.mean_reciprocal_rank, 3)}</span>
+              </div>
+            ))}
+          </div>
+          {data.additional_metrics.unavailable.length ? (
+            <div className="callout warning">
+              Недоступные baseline-методы: {data.additional_metrics.unavailable.map((item) => String(item.label)).join(', ')}.
+            </div>
+          ) : null}
+        </article>
+
+        <article className="panel">
+          <div className="section-title">
+            <span className="eyebrow">Сохранение Top-1 при 10% маскировании</span>
+            <p>{data.robustness_summary?.definition}</p>
+          </div>
+          <div className="results-table small">
+            <div className="results-table-header">
+              <span>Модель</span>
+              <span>Чистый Top-1</span>
+              <span>Top-1 после</span>
+              <span>Сохранение</span>
+            </div>
+            {primaryRobustnessRows.map((row) => (
+              <div key={row.model_key} className="results-table-row">
+                <span>{row.model_label}</span>
+                <span>{formatPercent(row.top1_clean)}</span>
+                <span>{formatPercent(row.top1_corrupted)}</span>
+                <span>{formatPercent(row.top1_retention)}</span>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="two-column">
+        <article className="panel">
+          <div className="section-title">
+            <span className="eyebrow">Устойчивость по seed’ам</span>
+            <p>{data.seed_stability?.note ?? 'Артефакт seed stability пока не рассчитан.'}</p>
+          </div>
+          <div className="results-table small">
+            <div className="results-table-header">
+              <span>Модель</span>
+              <span>Top-1</span>
+              <span>Top-3</span>
+              <span>MRR</span>
+            </div>
+            {(data.seed_stability?.models ?? []).map((row) => (
+              <div key={row.key} className="results-table-row">
+                <span>{row.label}</span>
+                <span>{formatMeanStd(row.summary.top1_accuracy.mean, row.summary.top1_accuracy.std)}</span>
+                <span>{formatMeanStd(row.summary.top3_hit_rate.mean, row.summary.top3_hit_rate.std)}</span>
+                <span>{formatMeanStd(row.summary.mean_reciprocal_rank.mean, row.summary.mean_reciprocal_rank.std)}</span>
               </div>
             ))}
           </div>
@@ -213,11 +324,60 @@ export default function EvaluationPage() {
 
         <article className="panel">
           <div className="section-title">
-            <span className="eyebrow">Краткий вывод</span>
-            <p>{data.conclusion}</p>
+            <span className="eyebrow">Обобщение между пациентами</span>
+            <p>Доли same/cross-patient показывают структуру извлечения, а не клиническую переносимость.</p>
+          </div>
+          <div className="results-table small">
+            <div className="results-table-header">
+              <span>Модель</span>
+              <span>Same-patient</span>
+              <span>Cross-patient</span>
+            </div>
+            {(data.patient_generalization ?? []).map((row) => (
+              <div key={String(row.key)} className="results-table-row">
+                <span>{String(row.label)}</span>
+                <span>{formatPercent(row.same_patient_top1_rate as number | null | undefined)}</span>
+                <span>{formatPercent(row.cross_patient_top1_rate as number | null | undefined)}</span>
+              </div>
+            ))}
           </div>
         </article>
       </section>
+
+      <details className="panel disclosure-panel">
+        <summary>Неудачные и неоднозначные случаи выбранной модели</summary>
+        <div className="disclosure-content">
+          {selectedFailureBlock ? (
+            <div className="results-table small">
+              <div className="results-table-header">
+                <span>Тип</span>
+                <span>Окно</span>
+                <span>Истинная метка</span>
+                <span>Top-1</span>
+                <span>Причина сложности</span>
+              </div>
+              {[...(selectedFailureBlock.top1_failures ?? []), ...(selectedFailureBlock.ambiguous_cases ?? [])].slice(0, 6).map((item, index) => (
+                <div key={`${item.query_id}-${index}`} className="results-table-row">
+                  <span>{index < (selectedFailureBlock.top1_failures?.length ?? 0) ? 'Ошибка Top-1' : 'Неоднозначность'}</span>
+                  <span>{item.query_id}</span>
+                  <span>{item.true_label_display}</span>
+                  <span>{item.retrieved_label_display}</span>
+                  <span>{item.why_difficult}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-panel">Для выбранной модели нет компактного failure-analysis артефакта.</div>
+          )}
+        </div>
+      </details>
+
+      <article className="panel">
+        <div className="section-title">
+          <span className="eyebrow">Краткий вывод</span>
+          <p>{data.conclusion}</p>
+        </div>
+      </article>
 
       <details className="panel disclosure-panel">
         <summary>Дополнительные метрики</summary>
@@ -264,11 +424,6 @@ export default function EvaluationPage() {
                   </div>
                 ))}
               </div>
-              {data.additional_metrics.unavailable.length ? (
-                <div className="callout warning">
-                  Недоступные baseline-методы: {data.additional_metrics.unavailable.map((item) => String(item.label)).join(', ')}.
-                </div>
-              ) : null}
             </div>
           </div>
         </div>

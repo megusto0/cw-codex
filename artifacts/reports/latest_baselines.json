@@ -1,0 +1,393 @@
+{
+  "generated_at": "2026-04-23T23:03:11.045936+00:00",
+  "dataset": {
+    "patients": 12,
+    "extracted_windows": 2168,
+    "usable_windows": 830,
+    "memory_windows": 576,
+    "feature_dimension": 91
+  },
+  "baselines": [
+    {
+      "key": "cosine_knn",
+      "label": "Cosine kNN",
+      "family": "baseline",
+      "available": 1,
+      "top1_accuracy": 0.4806201550387597,
+      "top3_hit_rate": 0.7209302325581395,
+      "mean_reciprocal_rank": 0.6071059431524547,
+      "noise_stability": 1.0154838709677418,
+      "additional_metrics": {
+        "top5_hit_rate": 0.7751937984496124,
+        "label_purity_top5": 0.4356589147286822,
+        "balanced_accuracy": 0.26942355889724307,
+        "macro_f1": 0.25977124183006534
+      },
+      "noise_points": [
+        {
+          "mode": "gaussian_noise",
+          "level": 0.0,
+          "top1_accuracy": 0.4806201550387597,
+          "top3_hit_rate": 0.7209302325581395
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.05,
+          "top1_accuracy": 0.49612403100775193,
+          "top3_hit_rate": 0.7209302325581395
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.1,
+          "top1_accuracy": 0.5116279069767442,
+          "top3_hit_rate": 0.7364341085271318
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.15,
+          "top1_accuracy": 0.5116279069767442,
+          "top3_hit_rate": 0.7364341085271318
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.0,
+          "top1_accuracy": 0.4806201550387597,
+          "top3_hit_rate": 0.7209302325581395
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.1,
+          "top1_accuracy": 0.4728682170542636,
+          "top3_hit_rate": 0.7209302325581395
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.2,
+          "top1_accuracy": 0.4496124031007752,
+          "top3_hit_rate": 0.7441860465116279
+        }
+      ],
+      "notes": "Прямое kNN по cosine similarity в стандартизованном признаковом пространстве.",
+      "robustness_summary": [
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.05,
+          "label": "Гауссово возмущение: малое",
+          "top1_clean": 0.4806201550387597,
+          "top3_clean": 0.7209302325581395,
+          "top1_corrupted": 0.49612403100775193,
+          "top3_corrupted": 0.7209302325581395,
+          "top1_drop": -0.01550387596899222,
+          "top3_drop": 0.0,
+          "top1_retention": 1.032258064516129,
+          "top3_retention": 1.0
+        },
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.1,
+          "label": "Гауссово возмущение: среднее",
+          "top1_clean": 0.4806201550387597,
+          "top3_clean": 0.7209302325581395,
+          "top1_corrupted": 0.5116279069767442,
+          "top3_corrupted": 0.7364341085271318,
+          "top1_drop": -0.031007751937984496,
+          "top3_drop": -0.015503875968992276,
+          "top1_retention": 1.064516129032258,
+          "top3_retention": 1.021505376344086
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.1,
+          "label": "Маскирование 10%",
+          "top1_clean": 0.4806201550387597,
+          "top3_clean": 0.7209302325581395,
+          "top1_corrupted": 0.4728682170542636,
+          "top3_corrupted": 0.7209302325581395,
+          "top1_drop": 0.007751937984496138,
+          "top3_drop": 0.0,
+          "top1_retention": 0.9838709677419355,
+          "top3_retention": 1.0
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.2,
+          "label": "Маскирование 20%",
+          "top1_clean": 0.4806201550387597,
+          "top3_clean": 0.7209302325581395,
+          "top1_corrupted": 0.4496124031007752,
+          "top3_corrupted": 0.7441860465116279,
+          "top1_drop": 0.031007751937984496,
+          "top3_drop": -0.023255813953488413,
+          "top1_retention": 0.935483870967742,
+          "top3_retention": 1.032258064516129
+        }
+      ],
+      "corruption_retention_top1_10": 0.9838709677419355
+    },
+    {
+      "key": "dtw_knn",
+      "label": "DTW kNN",
+      "family": "baseline",
+      "available": 1,
+      "top1_accuracy": 0.46511627906976744,
+      "top3_hit_rate": 0.7364341085271318,
+      "mean_reciprocal_rank": 0.5978036175710595,
+      "noise_stability": 0.9935483870967742,
+      "additional_metrics": {
+        "top5_hit_rate": 0.8217054263565892,
+        "label_purity_top5": 0.42945736434108533,
+        "balanced_accuracy": 0.24348370927318297,
+        "macro_f1": 0.23518169792948873
+      },
+      "noise_points": [
+        {
+          "mode": "gaussian_noise",
+          "level": 0.0,
+          "top1_accuracy": 0.46511627906976744,
+          "top3_hit_rate": 0.7364341085271318
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.05,
+          "top1_accuracy": 0.4728682170542636,
+          "top3_hit_rate": 0.7364341085271318
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.1,
+          "top1_accuracy": 0.4573643410852713,
+          "top3_hit_rate": 0.7441860465116279
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.0,
+          "top1_accuracy": 0.46511627906976744,
+          "top3_hit_rate": 0.7364341085271318
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.05,
+          "top1_accuracy": 0.4573643410852713,
+          "top3_hit_rate": 0.7441860465116279
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.1,
+          "top1_accuracy": 0.4496124031007752,
+          "top3_hit_rate": 0.7131782945736435
+        }
+      ],
+      "notes": "Последовательностный baseline по предпищевому CGM-сегменту.",
+      "robustness_summary": [
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.05,
+          "label": "Гауссово возмущение: малое",
+          "top1_clean": 0.46511627906976744,
+          "top3_clean": 0.7364341085271318,
+          "top1_corrupted": 0.4728682170542636,
+          "top3_corrupted": 0.7364341085271318,
+          "top1_drop": -0.007751937984496138,
+          "top3_drop": 0.0,
+          "top1_retention": 1.0166666666666666,
+          "top3_retention": 1.0
+        },
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.1,
+          "label": "Гауссово возмущение: среднее",
+          "top1_clean": 0.46511627906976744,
+          "top3_clean": 0.7364341085271318,
+          "top1_corrupted": 0.4573643410852713,
+          "top3_corrupted": 0.7441860465116279,
+          "top1_drop": 0.007751937984496138,
+          "top3_drop": -0.007751937984496138,
+          "top1_retention": 0.9833333333333333,
+          "top3_retention": 1.0105263157894737
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.1,
+          "label": "Маскирование 10%",
+          "top1_clean": 0.46511627906976744,
+          "top3_clean": 0.7364341085271318,
+          "top1_corrupted": 0.4496124031007752,
+          "top3_corrupted": 0.7131782945736435,
+          "top1_drop": 0.01550387596899222,
+          "top3_drop": 0.023255813953488302,
+          "top1_retention": 0.9666666666666667,
+          "top3_retention": 0.9684210526315791
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.1,
+          "label": "Маскирование 20% (уровень 0.10)",
+          "top1_clean": 0.46511627906976744,
+          "top3_clean": 0.7364341085271318,
+          "top1_corrupted": 0.4496124031007752,
+          "top3_corrupted": 0.7131782945736435,
+          "top1_drop": 0.01550387596899222,
+          "top3_drop": 0.023255813953488302,
+          "top1_retention": 0.9666666666666667,
+          "top3_retention": 0.9684210526315791
+        }
+      ],
+      "corruption_retention_top1_10": 0.9666666666666667
+    },
+    {
+      "key": "soft_dtw_knn",
+      "label": "Soft-DTW kNN",
+      "family": "baseline",
+      "available": 1,
+      "top1_accuracy": 0.18604651162790697,
+      "top3_hit_rate": 0.5038759689922481,
+      "mean_reciprocal_rank": 0.3449612403100775,
+      "noise_stability": 1.0365168539325844,
+      "additional_metrics": {
+        "top5_hit_rate": 0.6511627906976745,
+        "label_purity_top5": 0.18914728682170542,
+        "balanced_accuracy": 0.1976190476190476,
+        "macro_f1": 0.0830316742081448
+      },
+      "noise_points": [
+        {
+          "mode": "gaussian_noise",
+          "level": 0.0,
+          "top1_accuracy": 0.18604651162790697,
+          "top3_hit_rate": 0.5038759689922481
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.05,
+          "top1_accuracy": 0.18604651162790697,
+          "top3_hit_rate": 0.5038759689922481
+        },
+        {
+          "mode": "gaussian_noise",
+          "level": 0.1,
+          "top1_accuracy": 0.18604651162790697,
+          "top3_hit_rate": 0.49612403100775193
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.0,
+          "top1_accuracy": 0.18604651162790697,
+          "top3_hit_rate": 0.5038759689922481
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.05,
+          "top1_accuracy": 0.27906976744186046,
+          "top3_hit_rate": 0.5038759689922481
+        },
+        {
+          "mode": "feature_mask",
+          "level": 0.1,
+          "top1_accuracy": 0.1937984496124031,
+          "top3_hit_rate": 0.5116279069767442
+        }
+      ],
+      "notes": "Последовательностный baseline по предпищевому CGM-сегменту.",
+      "robustness_summary": [
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.05,
+          "label": "Гауссово возмущение: малое",
+          "top1_clean": 0.18604651162790697,
+          "top3_clean": 0.5038759689922481,
+          "top1_corrupted": 0.18604651162790697,
+          "top3_corrupted": 0.5038759689922481,
+          "top1_drop": 0.0,
+          "top3_drop": 0.0,
+          "top1_retention": 1.0,
+          "top3_retention": 1.0
+        },
+        {
+          "mode": "gaussian_noise",
+          "mode_display": "Гауссов шум",
+          "level": 0.1,
+          "label": "Гауссово возмущение: среднее",
+          "top1_clean": 0.18604651162790697,
+          "top3_clean": 0.5038759689922481,
+          "top1_corrupted": 0.18604651162790697,
+          "top3_corrupted": 0.49612403100775193,
+          "top1_drop": 0.0,
+          "top3_drop": 0.007751937984496138,
+          "top1_retention": 1.0,
+          "top3_retention": 0.9846153846153846
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.1,
+          "label": "Маскирование 10%",
+          "top1_clean": 0.18604651162790697,
+          "top3_clean": 0.5038759689922481,
+          "top1_corrupted": 0.1937984496124031,
+          "top3_corrupted": 0.5116279069767442,
+          "top1_drop": -0.007751937984496138,
+          "top3_drop": -0.007751937984496138,
+          "top1_retention": 1.0416666666666667,
+          "top3_retention": 1.0153846153846153
+        },
+        {
+          "mode": "feature_mask",
+          "mode_display": "Маскирование признаков",
+          "level": 0.1,
+          "label": "Маскирование 20% (уровень 0.10)",
+          "top1_clean": 0.18604651162790697,
+          "top3_clean": 0.5038759689922481,
+          "top1_corrupted": 0.1937984496124031,
+          "top3_corrupted": 0.5116279069767442,
+          "top1_drop": -0.007751937984496138,
+          "top3_drop": -0.007751937984496138,
+          "top1_retention": 1.0416666666666667,
+          "top3_retention": 1.0153846153846153
+        }
+      ],
+      "corruption_retention_top1_10": 1.0416666666666667
+    },
+    {
+      "key": "nearest_prototype",
+      "label": "Nearest prototype",
+      "family": "baseline",
+      "available": 1,
+      "top1_accuracy": 0.35658914728682173,
+      "top3_hit_rate": 0.6511627906976745,
+      "mean_reciprocal_rank": 0.5381136950904392,
+      "noise_stability": null,
+      "additional_metrics": {
+        "top5_hit_rate": 0.8914728682170543,
+        "label_purity_top5": 0.22286821705426357,
+        "balanced_accuracy": 0.28426065162907266,
+        "macro_f1": 0.21024046434494195
+      },
+      "notes": "Сравнение с усредненными prototype-векторами train-памяти.",
+      "robustness_summary": [],
+      "corruption_retention_top1_10": null
+    },
+    {
+      "key": "k_shape",
+      "label": "k-Shape",
+      "family": "baseline",
+      "available": 0,
+      "top1_accuracy": null,
+      "top3_hit_rate": null,
+      "mean_reciprocal_rank": null,
+      "noise_stability": null,
+      "additional_metrics": {},
+      "notes": "Baseline не собран в текущем artifact pipeline и не включен в UI как полноценный режим.",
+      "robustness_summary": [],
+      "corruption_retention_top1_10": null
+    }
+  ]
+}

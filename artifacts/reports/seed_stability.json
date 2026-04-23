@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-04-23T23:03:10.941419+00:00",
+  "n_seeds": 3,
+  "note": "Отчёт построен по трём seed’ам, чтобы ограничить время локальной пересборки. Значения отражают устойчивость trainable режимов на текущем 12-пациентном split.",
+  "models": [
+    {
+      "key": "siamese_temporal",
+      "label": "Сиамская temporal-модель",
+      "status": "ok",
+      "reason": null,
+      "seeds": [
+        7,
+        13,
+        29
+      ],
+      "runs": [
+        {
+          "seed": 7,
+          "top1_accuracy": 0.3953488372093023,
+          "top3_hit_rate": 0.6434108527131783,
+          "mean_reciprocal_rank": 0.5218346253229974
+        },
+        {
+          "seed": 13,
+          "top1_accuracy": 0.4728682170542636,
+          "top3_hit_rate": 0.6976744186046512,
+          "mean_reciprocal_rank": 0.5850129198966408
+        },
+        {
+          "seed": 29,
+          "top1_accuracy": 0.4418604651162791,
+          "top3_hit_rate": 0.689922480620155,
+          "mean_reciprocal_rank": 0.5640826873385013
+        }
+      ],
+      "summary": {
+        "top1_accuracy": {
+          "mean": 0.43669250645994834,
+          "std": 0.03901723222362146
+        },
+        "top3_hit_rate": {
+          "mean": 0.6770025839793282,
+          "std": 0.02934836354418745
+        },
+        "mean_reciprocal_rank": {
+          "mean": 0.5569767441860466,
+          "std": 0.0321829931388141
+        }
+      }
+    },
+    {
+      "key": "som",
+      "label": "Карта Кохонена",
+      "status": "ok",
+      "reason": null,
+      "seeds": [
+        7,
+        13,
+        29
+      ],
+      "runs": [
+        {
+          "seed": 7,
+          "top1_accuracy": 0.4806201550387597,
+          "top3_hit_rate": 0.7751937984496124,
+          "mean_reciprocal_rank": 0.6291989664082688
+        },
+        {
+          "seed": 13,
+          "top1_accuracy": 0.4883720930232558,
+          "top3_hit_rate": 0.751937984496124,
+          "mean_reciprocal_rank": 0.6151162790697675
+        },
+        {
+          "seed": 29,
+          "top1_accuracy": 0.49612403100775193,
+          "top3_hit_rate": 0.7441860465116279,
+          "mean_reciprocal_rank": 0.6140826873385014
+        }
+      ],
+      "summary": {
+        "top1_accuracy": {
+          "mean": 0.4883720930232558,
+          "std": 0.00775193798449611
+        },
+        "top3_hit_rate": {
+          "mean": 0.7571059431524548,
+          "std": 0.01613694573229563
+        },
+        "mean_reciprocal_rank": {
+          "mean": 0.6194659776055126,
+          "std": 0.008444843470584227
+        }
+      }
+    }
+  ]
+}
